@@ -1,0 +1,75 @@
+%{
+#include <iostream>
+#include <string>
+using namespace std;
+
+string lexema;
+
+%}
+
+/* Coloque aqui definições regulares */
+
+WS	[ \t\n]
+DIGITO  [0-9]
+LETRA   [A-Za-z_]
+INT     {DIGITO}+
+ID      ({LETRA}|$)({LETRA}|{DIGITO})*
+FLOAT   {DIGITO}+(\.{DIGITO}+)?([eE][+\-]?{DIGITO}+)?
+FOR     [fF][oO][rR]
+IF      [iI][fF]
+MAIG    ">="
+MEIG    "<="
+IG      "=="
+DIF     "!="
+COMENTARIO1 "//"(.)* 
+COMENTARIO2 "/*"([^*]|"*"[^/])*"*/"
+STRING \"([^"\n]|\"\"|\\\")*\"
+STRINGSIMP \'([^'\n]|\'\'|\\\')*\'
+EXPR    "$""{"{ID}"}"
+EXPRBEG "$""{"
+EXPREND "}"
+STRING2 [\`][^{EXPR}`]*[\`]
+STRING3 [\`][^{EXPR}`]
+
+%%
+    /* Padrões e ações. Nesta seção, comentários devem ter um tab antes */
+
+{WS}	{} 
+
+{COMENTARIO1}   {lexema = yytext; return _COMENTARIO;}
+
+{COMENTARIO2}   {lexema = yytext; return _COMENTARIO;}
+
+{EXPR}      {lexema = yytext; return _EXPR;}
+
+{STRING}   {lexema = yytext; return _STRING;}
+
+{STRINGSIMP}   {lexema = yytext; return _STRING;}
+
+{STRING2}   {lexema = yytext; return _STRING2;}
+
+{STRING3}   {lexema = yytext; return _STRING2;}
+
+{MAIG}   {lexema = yytext; return _MAIG;}
+
+{MEIG}   {lexema = yytext; return _MAIG;}
+
+{IG}   {lexema = yytext; return _IG;}
+
+{DIF}   {lexema = yytext; return _DIF;}
+
+{FOR}   {lexema = yytext; return _FOR;}
+
+{IF}   {lexema = yytext; return _IF;}
+
+{INT}   {lexema = yytext; return _INT;}
+
+{FLOAT} {lexema = yytext; return _FLOAT;}
+ 
+{ID}    {lexema = yytext; return _ID;}
+
+.       {lexema = yytext; return lexema[0];}
+
+%%
+
+/* Não coloque nada aqui - a função main é automaticamente incluída na hora de avaliar e dar a nota. */

@@ -1,1 +1,1 @@
-123.123
+Hora atual: ${$agora} horas n'agua!`
