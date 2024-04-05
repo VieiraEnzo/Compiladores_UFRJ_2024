@@ -45,7 +45,6 @@ string cleanSTRSIMPLE(string a){
     return newS;
 }
 
-enum TOKEN { _ID = 256, _FOR, _IF, _INT, _FLOAT, _MAIG, _MEIG, _IG, _DIF, _STRING, _STRING2, _COMENTARIO, _EXPR };
 %}
 
 /* Coloque aqui definições regulares */
@@ -68,9 +67,8 @@ STRING \"([^"\n]|\"\"|\\\")*\"
 STRINGSIMP \'([^'\n]|\'\'|\\\')*\'
 EXPR    "{"{ID}
 STRING2 [`][^{EXPR}`]*[`]
-STRING3 [`][^`$]*"$"
+STRING3 [`][^`]*"$"
 STRING4 "}"[^`]*[\`]
-ERROID ({LETRA}|$)({LETRA}|{DIGITO}|$)*
 
 
 %%
@@ -109,21 +107,11 @@ ERROID ({LETRA}|$)({LETRA}|{DIGITO}|$)*
 {INT}   {lexema = yytext; return _INT;}
 
 {FLOAT} {lexema = yytext; return _FLOAT;}
-
+ 
 {ID}    {lexema = yytext; return _ID;}
-
-{ERROID}    {lexema = yytext; cout << "Erro: Identificador invalido: " << lexema << endl;}
 
 .       {lexema = yytext; return lexema[0];}
 
 %%
 
 /* Não coloque nada aqui - a função main é automaticamente incluída na hora de avaliar e dar a nota. */
-int main() {
-  int token = yylex();
-  
-  while( token != 0 ) {
-    cout << "Valor: " << token << ", lexema: " << lexema << endl;
-    token = yylex();
-  }
-}

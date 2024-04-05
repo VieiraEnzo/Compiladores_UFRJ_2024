@@ -1,1 +1,1 @@
-Hora atual: ${$agora} horas n'agua!`
+`Hora atual: ${$agora} horas n'agua!`

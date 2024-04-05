@@ -45,7 +45,6 @@ string cleanSTRSIMPLE(string a){
     return newS;
 }
 
-enum TOKEN { _ID = 256, _FOR, _IF, _INT, _FLOAT, _MAIG, _MEIG, _IG, _DIF, _STRING, _STRING2, _COMENTARIO, _EXPR };
 %}
 
 /* Coloque aqui definições regulares */
@@ -119,11 +118,3 @@ ERROID ({LETRA}|$)({LETRA}|{DIGITO}|$)*
 %%
 
 /* Não coloque nada aqui - a função main é automaticamente incluída na hora de avaliar e dar a nota. */
-int main() {
-  int token = yylex();
-  
-  while( token != 0 ) {
-    cout << "Valor: " << token << ", lexema: " << lexema << endl;
-    token = yylex();
-  }
-}
