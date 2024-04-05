@@ -67,7 +67,8 @@ COMENTARIO2 "/*"([^*]|"*"[^/])*"*/"
 STRING \"([^"\n]|\"\"|\\\")*\"
 STRINGSIMP \'([^'\n]|\'\'|\\\')*\'
 EXPR    "{"{ID}
-STRING2 [`][^{EXPR}`]*[`]
+EXPROR "$""{"{ID}"}"
+STRING2 [`][^{EXPROR}`]*[`]
 STRING3 [`][^`$]*"$"
 STRING4 "}"[^`]*[\`]
 ERROID ({LETRA}|$)({LETRA}|{DIGITO}|$)*
