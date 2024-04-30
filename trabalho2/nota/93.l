@@ -225,10 +225,6 @@ void F(){
             L();
             print(" -");
             break;
-        case '+':
-            casa('+');
-            L();
-            break;
     }
 }
 

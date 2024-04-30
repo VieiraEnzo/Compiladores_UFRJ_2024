@@ -121,8 +121,8 @@ void E_linha(){
             E_linha();
             break;
         case '-':
-            // int p = last_token;
-            // if(p == '-' || p == '=' || p == _PRINT  || p == '(' || p == '/') print(" 0");
+            int p = last_token;
+            if(p == '-' || p == '=' || p == _PRINT  || p == '(') print(" 0");
             casa('-');
             T();
             print(" -");
@@ -218,16 +218,6 @@ void F(){
             E();
             casa(')');
             print(" dtos #");
-            break;
-        case '-':
-            print(" 0");
-            casa('-');
-            L();
-            print(" -");
-            break;
-        case '+':
-            casa('+');
-            L();
             break;
     }
 }

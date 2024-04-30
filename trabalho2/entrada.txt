@@ -1,3 +1,1 @@
-a = "hello, ";
-b = a + "world" + "!";
-print b;
+print +-+---a!;
