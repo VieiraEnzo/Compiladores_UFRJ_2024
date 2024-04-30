@@ -4,8 +4,22 @@
 using namespace std;
 
 int token;
+string lexema;
 
-enum TOKEN { _ID = 256, _NUM, _STRING};
+enum TOKEN { _ID = 256, _NUM, _STRING, _PRINT, _MAX};
+
+void S();
+void A();
+void E();
+void T();
+void L();
+void F();
+void R();
+void E_linha();
+void T_linha();
+void L_linha();
+int next_token();
+void casa(int esperado);
 
 %}
 
@@ -25,13 +39,17 @@ STRING \"([^"\n]|\"\"|\\\")*\"
 
 {WS}	{} 
 
-{STRING}   {lexema = yytext; lexema = cleanSTR(lexema) ;return _STRING;}
+{STRING}   {lexema = yytext; return _STRING;}
 
-{INT}   {lexema = yytext; return _INT;}
+{INT}   {lexema = yytext; return _NUM;}
 
 {FLOAT} {lexema = yytext; return _NUM;}
 
-{ID}    {lexema = yytext; return _NUM;}
+{ID}    {lexema = yytext; return _ID;}
+
+'print' {lexema = yytext; return _PRINT;}
+
+'max'   {lexema = yytext; return _MAX;}
 
 .       {lexema = yytext; return lexema[0];}
 
@@ -46,16 +64,132 @@ void casa(int esperado){
 }
 
 int next_token(){
-    return yylex;
+    return yylex();
 }
 
+void S(){
+    switch (token){
+        case _PRINT:
+            casa(_PRINT);
+            E();
+            printf(" print #");
+            casa(';');
+            S();
+            break;
+        case _ID:
+            A();
+            casa(';');
+            S();
+    }
+}
+
+void A(){
+    string temp = lexema;
+    casa(_ID);
+    printf(" " + temp);
+    casa('=');
+    E();
+    printf(" = ^");
+}
+
+void E(){
+    T();
+    E_linha();
+}
+
+void E_linha(){
+    switch(token){
+        case '+':
+            casa('+');
+            T();
+            printf(" +");
+            E_linha();
+            break;
+        case '-':
+            casa('-');
+            T();
+            printf(" -");
+            E_linha();
+            break;
+    }
+}
+
+void T(){
+    L();
+    T_linha();
+}
+
+void T_linha(){
+    switch (token){
+        case '*':
+            casa('*');
+            L();
+            printf(" *");
+            T_linha();
+            break;
+        case '/':
+            casa('/');
+            L();
+            printf(" /");
+            T_linha();
+            break;
+    }
+}
+
+void L(){
+    F();
+    R();
+}
+
+void R(){
+    switch(token){
+        case '^':
+            casa('^');
+            L();
+            printf(" ^");
+            break;
+        case '!':
+            casa('!');
+            printf(" !");
+            break;
+    }
+}
+
+void F(){
+    switch(token){
+        case _ID:
+            string temp = lexema;
+            casa(_ID);
+            printf(temp + " @");
+            break;
+        case _NUM:
+            string temp = lexema;
+            casa(_NUM);
+            printf(" " + temp);
+            break;
+        case _STRING:
+            casa(_STRING);
+            break;
+        case '(':
+            casa('(');
+            E();
+            casa(')');
+            break;
+        case _MAX:
+            casa(_MAX);
+            casa('(');
+            E();
+            casa(',');
+            E();
+            casa(')');
+            break;
+    }
+}
 
 int main() {
-
-
     
   token = next_token();
-  V();
+  S();
   printf("Sintaxe ok!\n");
 
   return 0;
