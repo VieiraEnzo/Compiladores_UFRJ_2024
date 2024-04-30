@@ -78,13 +78,13 @@ void S(){
             E();
             print(" print #");
             casa(';');
-            // print("\n");
+            print("\n");
             S();
             break;
         case _ID:
             A();
             casa(';');
-            // print("\n");
+            print("\n");
             S();
             break;
     }
