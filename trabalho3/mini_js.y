@@ -66,6 +66,7 @@ string gera_label( string prefixo ) {
 }
 
 void print( vector<string> codigo ) {
+  int i = 1;
   for( string s : codigo )
     cout << s << " ";
     
@@ -157,33 +158,24 @@ CMD : CMD_DECL ';'
     | ';' {$$.clear();}
     ;
 
-//REFAZER AS IDS E LIMPAR
+A : Lvalue '=' E            {$$.c = limpAcesso($1.c) + $3.c + "=" + "^";}
+  | LvalueProp '=' E        {$$.c = limpAcesso($1.c) + $3.c + "[=]" + "^";}
+  | Lvalue MAIS_IGUAL E     {$$.c = limpAcesso($1.c) + $1.c + $3.c + "+" + "=" + "^";}
+  | LvalueProp MAIS_IGUAL E {$$.c = limpAcesso($1.c) + $1.c + $3.c + "+" + "[=]" + "^";}
+  | MAIS_MAIS Lvalue        {$$.c = limpAcesso($2.c) + $2.c + "1" + "+" + "=";}
+  | MAIS_MAIS LvalueProp    {$$.c = limpAcesso($2.c) + $2.c  + "1" + "+" + "[=]";}
 
-A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
-  | IDls '=' E        {$$.c = $1.c + $3.c + "[=]" + "^";}
-  | ID MAIS_IGUAL E   {$$.c = $1.c + $1.c + "@" + $3.c + "+" + "=" + "^";}
-  | IDls MAIS_IGUAL E  {$$.c = $1.c + $1.c + "[@]" + $3.c + "+" + "[=]" + "^";}
-  | MAIS_MAIS ID       {$$.c = $2.c + $2.c + "@" + "1" + "+" + "=" + "^";}
-  | MAIS_MAIS IDls     {$$.c = $2.c + $2.c + "[@]" + "1" + "+" + "[=]" + "^";};
-  | ID MAIS_MAIS       {$$.c = $1.c + $1.c + "@" + "1" + "+" + "=" + "^";}
-  | IDls MAIS_MAIS     {$$.c = $1.c + $1.c + "[@]" + "1" + "+" + "[=]" + "^";};
-  ;
+Lvalue : ID   {$$.c = $1.c + "@";}
 
-IDls : ID CAMPO  {$$.c = $1.c + "@" + limpAcesso($2.c); }
-      | ID
-      ;
-
-CAMPO : '.'ID CAMPO  {$$.c = $2.c + "[@]" + $3.c; }
-      | '[' E ']' CAMPO  {$$.c = $2.c + "[@]" + $4.c;}
-      | {$$.clear();}
-      ;
+LvalueProp : E '[' E ']'  {$$.c = $1.c + $3.c + "[@]";}
+           | E '.' ID     {$$.c = $1.c + $3.c + "[@]";}
 
 CMD_DECL : LET LET_VARs { $$.c = $2.c; }
         | CONST CONST_VARs {$$.c = $2.c;}
         | VAR VAR_VARs  {$$.c = $2.c;}
         ;
 
-LET_VARs : LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
+LET_VARs : LET_VAR ',' LET_VARs {$$.c = $1.c + $3.c;}
         | LET_VAR
         ;
         
@@ -195,14 +187,14 @@ CONST_VARs : CONST_VAR ',' CONST_VARs {$$.c = $1.c + $3.c;}
            | CONST_VAR
            ;
 CONST_VAR : ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclConst, $1 );}
-        | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclConst, $1 ); }
+           | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclConst, $1 ); }
 
 
-VAR_VARs : LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
-         | LET_VAR
+VAR_VARs : VAR_VAR ',' VAR_VARs {$$.c = $1.c + $3.c;}
+         | VAR_VAR
          ;
 
-VAR_VAR : ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclVar, $1 );}
+VAR_VAR : ID      { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclVar, $1 );}
         | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclVar, $1 ); }
 
 CMD_WHILE : WHILE '(' E ')' CMD
@@ -221,7 +213,7 @@ CMD_WHILE : WHILE '(' E ')' CMD
                     definicao_fim_while;
           }
 
-CMD_FOR : FOR '(' CMD  E ';' A ')' CMD            //TROCAR CMD POR IN_FOR TALVEZ
+CMD_FOR : FOR '(' CMD  E ';' E ')' CMD            //TROCAR CMD POR IN_FOR TALVEZ
         {
           string inicio_for = gera_label("inicio_for");
           string fim_for = gera_label("fim_for");
@@ -232,7 +224,7 @@ CMD_FOR : FOR '(' CMD  E ';' A ')' CMD            //TROCAR CMD POR IN_FOR TALVEZ
               inicio_for + "?" +     //Entra no for?
               fim_for + "#" +
               definicao_inicio_for + 
-              $8.c + $6.c + $4.c + 
+              $8.c + $6.c  + "^" + $4.c + 
               inicio_for + "?" +    //Executa comando e verifica
               definicao_fim_for;  
         }
@@ -268,20 +260,24 @@ CMD_ELSE : ELSE_IF '(' E ')' CMD CMD_ELSE
          | {$$.clear();}
          ;
 
-E : E '<' E { $$.c = $1.c + $3.c + $2.c; }
-  | E '>' E { $$.c = $1.c + $3.c + $2.c; }
-  | E '+' E { $$.c = $1.c + $3.c + $2.c; }
-  | E '-' E { $$.c = $1.c + $3.c + $2.c;}
-  | E '*' E { $$.c = $1.c + $3.c + $2.c;}
-  | E '/' E { $$.c = $1.c + $3.c + $2.c;}
-  | E '%' E { $$.c = $1.c + $3.c + $2.c;}
-  | E IGUAL E {$$.c = $1.c + $3.c + "==";}
-  | IDls '=' E {$$.c = $1.c + $3.c + "=";}
-  | ID CAMPO {$$.c = $1.c + "@" + $2.c ; }
-  | MAIS_MAIS ID  {$$.c = $2.c + $2.c + "@" + "1" + "+" + "=";}
-  | MAIS_MAIS IDls  {$$.c = $2.c + $2.c + "[@]" + "1" + "+" + "[=]";};
-  | ID MAIS_MAIS {$$.c = $1.c + $1.c + "@" + "1" + "+" + "=" + "1"  + "-";}        
-  | IDls MAIS_MAIS  {$$.c = $2.c + $1.c + "[@]" + "1" + "+" + "[=]" + "1"  + "-";}; 
+E : E '<' E   { $$.c = $1.c + $3.c + $2.c; }
+  | E '>' E   { $$.c = $1.c + $3.c + $2.c; }
+  | E '+' E   { $$.c = $1.c + $3.c + $2.c; }
+  | E '-' E   { $$.c = $1.c + $3.c + $2.c; }
+  | E '*' E   { $$.c = $1.c + $3.c + $2.c; }
+  | E '/' E   { $$.c = $1.c + $3.c + $2.c; }
+  | E '%' E   { $$.c = $1.c + $3.c + $2.c; }
+  | E IGUAL E { $$.c = $1.c + $3.c + "=="; }
+  | Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "=";}
+  | LvalueProp '=' E {$$.c = limpAcesso($1.c) + $3.c + "[=]";}
+  | Lvalue MAIS_IGUAL E {$$.c = limpAcesso($1.c) + $1.c + $3.c + "+" + "=";}
+  | LvalueProp MAIS_IGUAL E {$$.c = limpAcesso($1.c) + $1.c + $3.c + "+" + "[=]";}
+  | Lvalue  
+  | LvalueProp
+  | MAIS_MAIS Lvalue      {$$.c = limpAcesso($2.c) + $2.c + "1" + "+" + "=";}
+  | MAIS_MAIS LvalueProp  {$$.c = limpAcesso($2.c) + $2.c  + "1" + "+" + "[=]";};
+  | Lvalue MAIS_MAIS      {$$.c = $1.c + limpAcesso($1.c) + $1.c + "1" + "+" + "=" + "^";}        
+  | LvalueProp MAIS_MAIS  {$$.c = $1.c + limpAcesso($1.c) + $1.c + "1" + "+" + "[=]" + "^";}; 
   | CDOUBLE
   | CINT
   | CSTRING
