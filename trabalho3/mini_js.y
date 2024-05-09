@@ -104,6 +104,7 @@ CMD : CMD_LET ';'
     | CMD_IF
     | CMD_FOR ';'
     | '{' CMDs '}' {$$.c = $2.c;}
+    | CMD_WHILE ';'
     ;
 
 A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
@@ -135,8 +136,23 @@ VAR : ID  { $$.c = $1.c + "&"; }
     | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; }
     ;
 
+CMD_WHILE : WHILE '(' E ')' CMD
+          {
+            string inicio_while = gera_label("inicio_while");
+            string fim_while = gera_label("fim_while");
+            string definicao_inicio_while = ":" + inicio_while;
+            string definicao_fim_while = ":" + fim_while;
 
-CMD_FOR : FOR '(' CMD  E ';' A ')' CMD
+            $$.c = $3.c + 
+                    inicio_while  + "?" +
+                    fim_while + "#" +
+                    definicao_inicio_while + 
+                    $5.c + $3.c + 
+                    inicio_while + "?" +
+                    definicao_fim_while;
+          }
+
+CMD_FOR : FOR '(' CMD  E ';' A ')' CMD            //TROCAR CMD POR IN_FOR TALVEZ
         {
           string inicio_for = gera_label("inicio_for");
           string fim_for = gera_label("fim_for");

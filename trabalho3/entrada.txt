@@ -1,6 +1,7 @@
-let a = 4, b = 5, c, d;
-if( a++ > b )
-  c = "a e' maior"
-      + "!";
-if( a < b + 1 )
-  d = "a e' menor";
+let i = 0, j = -1, x = 9, b = [];
+while( i < x - 2*3 + 2.1 ) {
+  b[i] = j;
+  i = i + 1;
+  j = i / 2.0 + j;
+};
+j = x = 0;
