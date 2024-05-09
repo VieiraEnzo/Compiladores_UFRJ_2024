@@ -106,7 +106,7 @@ void insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
       TipoDecl tipoDaVar = ts[nome].tipo;
 
       if(!(tipoDaVar == tipo && tipo == DeclVar)){
-            cout << "Erro: a variável " << nome <<" já foi declarada na linha " << ts[nome].linha;
+            cout << "Erro: a variável '" << nome <<"' ja foi declarada na linha " << ts[nome].linha << ".\n";
             exit(1);
       }
 
@@ -120,6 +120,21 @@ void insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
 
 }
 
+void verificar_variavel(Atributos at){
+  string nome = at.c[0];
+  if(ts.count(nome) == 0){
+      cout << "Erro: a variável '" << nome << "' não foi declarada.\n";
+      exit(1);
+  }
+}
+
+void verificar_const(Atributos at){
+  string nome = at.c[0];
+  if(ts[nome].tipo == DeclConst){
+    cout << "Erro: tentativa de modificar uma variável constante '" << nome << "'' .\n";
+    exit(1);
+  }
+}
 
 %}
 
@@ -165,7 +180,8 @@ A : Lvalue '=' E            {$$.c = limpAcesso($1.c) + $3.c + "=" + "^";}
   | MAIS_MAIS Lvalue        {$$.c = limpAcesso($2.c) + $2.c + "1" + "+" + "=";}
   | MAIS_MAIS LvalueProp    {$$.c = limpAcesso($2.c) + $2.c  + "1" + "+" + "[=]";}
 
-Lvalue : ID   {$$.c = $1.c + "@";}
+Lvalue : ID   {$$.c = $1.c + "@";
+                verificar_variavel($1);}
 
 LvalueProp : E '[' E ']'  {$$.c = $1.c + $3.c + "[@]";}
            | E '.' ID     {$$.c = $1.c + $3.c + "[@]";}
@@ -268,7 +284,7 @@ E : E '<' E   { $$.c = $1.c + $3.c + $2.c; }
   | E '/' E   { $$.c = $1.c + $3.c + $2.c; }
   | E '%' E   { $$.c = $1.c + $3.c + $2.c; }
   | E IGUAL E { $$.c = $1.c + $3.c + "=="; }
-  | Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "=";}
+  | Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_const($1);}
   | LvalueProp '=' E {$$.c = limpAcesso($1.c) + $3.c + "[=]";}
   | Lvalue MAIS_IGUAL E {$$.c = limpAcesso($1.c) + $1.c + $3.c + "+" + "=";}
   | LvalueProp MAIS_IGUAL E {$$.c = limpAcesso($1.c) + $1.c + $3.c + "+" + "[=]";}
