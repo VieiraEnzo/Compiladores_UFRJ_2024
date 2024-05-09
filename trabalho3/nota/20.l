@@ -34,7 +34,6 @@ STRING2      \'([^'\n]|\'\'|\\\')*\'
 "let"      { return token( LET ); }
 "if"       { return token( IF ); }
 "else"     { return token( ELSE ); }
-"else if"     { return token( ELSE_IF ); }
 "print"    { return token( PRINT ); }
 
 "{}"       { return token( NEWOBJECT ); }

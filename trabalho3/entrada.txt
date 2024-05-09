@@ -1,1 +1,2 @@
-obj['nom' + 'e'] = obj.nome + "!";
+obj.nums[3] += 1 ;
+

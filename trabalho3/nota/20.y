@@ -71,11 +71,9 @@ void print( vector<string> codigo ) {
     
   cout << endl;  
 }
-
-
 %}
 
-%token ID IF ELSE LET PRINT ELSE_IF
+%token ID IF ELSE LET PRINT
 %token CDOUBLE CSTRING CINT
 %token AND OR ME_IG MA_IG DIF IGUAL
 %token MAIS_IGUAL MAIS_MAIS
@@ -101,8 +99,6 @@ CMDs  : CMDs CMD {$$.c = $1.c + $2.c;};
 CMD : CMD_LET ';'
     | PRINT E ';' { $$.c = $2.c + "println" + "#"; }
     | A ';' 
-    | CMD_IF
-    | '{' CMDs '}' {$$.c = $2.c;}
     ;
 
 A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
@@ -130,36 +126,6 @@ VAR : ID  { $$.c = $1.c + "&"; }
     | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; }
     ;
 
-CMD_IF : IF '(' E ')' CMD CMD_ELSE  
-         { string lbl_true = gera_label( "lbl_true" );
-           string lbl_fim_if = gera_label( "lbl_fim_if" );
-           string definicao_lbl_true = ":" + lbl_true;
-           string definicao_lbl_fim_if = ":" + lbl_fim_if;
-                    
-            $$.c = $3.c +                       // Codigo da expressão
-                   lbl_true + "?" +             // Código do IF
-                   $6.c + lbl_fim_if + "#" +    // Código do False
-                   definicao_lbl_true + $5.c +  // Código do True
-                   definicao_lbl_fim_if         // Fim do IF
-                   ;
-         }
-
-CMD_ELSE : ELSE_IF '(' E ')' CMD CMD_ELSE
-        { string lbl_true = gera_label( "lbl_true" );
-           string lbl_fim_if = gera_label( "lbl_fim_if" );
-           string definicao_lbl_true = ":" + lbl_true;
-           string definicao_lbl_fim_if = ":" + lbl_fim_if;
-                    
-            $$.c = $3.c +                       // Codigo da expressão
-                   lbl_true + "?" +             // Código do IF
-                   $6.c + lbl_fim_if + "#" +    // Código do False
-                   definicao_lbl_true + $5.c +  // Código do True
-                   definicao_lbl_fim_if         // Fim do IF
-                   ;
-        }
-         | ELSE CMD {$$.c = $2.c;}
-         |
-         ;
 
 E : E '<' E { $$.c = $1.c + $3.c + $2.c; }
   | E '>' E { $$.c = $1.c + $3.c + $2.c; }
@@ -168,7 +134,6 @@ E : E '<' E { $$.c = $1.c + $3.c + $2.c; }
   | E '*' E { $$.c = $1.c + $3.c + $2.c;}
   | E '/' E { $$.c = $1.c + $3.c + $2.c;}
   | E '%' E { $$.c = $1.c + $3.c + $2.c;}
-  | E IGUAL E {$$.c = $1.c + $3.c + "==";}
   | IDls '=' E {$$.c = $1.c + $3.c + "=";}
   | ID {$$.c = $1.c + "@";}
   | ID '.' IDls {$$.c = $1.c + "@" + $3.c + "[@]"; }
@@ -183,7 +148,6 @@ E : E '<' E { $$.c = $1.c + $3.c + $2.c; }
   | NEWOBJECT
   | '(' E ')' {$$.c = $2.c;}
   ;
-  
 
 %%
 
