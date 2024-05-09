@@ -102,9 +102,9 @@ CMD : CMD_LET ';'
     | PRINT E ';' { $$.c = $2.c + "println" + "#"; }
     | A ';' 
     | CMD_IF
-    | CMD_FOR ';'
+    | CMD_FOR
     | '{' CMDs '}' {$$.c = $2.c;}
-    | CMD_WHILE ';'
+    | CMD_WHILE
     ;
 
 A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
@@ -116,13 +116,14 @@ A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
   ;
 
 IDls : ID '.' CAMPO  {$$.c = $1.c + "@" + $3.c; }
-      | ID '[' E ']'  {$$.c = $1.c + "@" + $3.c;}
+      | ID '[' E ']' {$$.c = $1.c + "@" + $3.c;}
       | ID
       ;
 
 CAMPO : ID '.' CAMPO  {$$.c = $1.c + "[@]" + $3.c; }
-      | ID '[' E ']'  {$$.c = $1.c + "[@]" + $3.c;}
+      | ID '[' E ']'   {$$.c = $1.c + "[@]" + $3.c;}
       | ID
+      |
       ;
 
 CMD_LET : LET VARs { $$.c = $2.c; }
