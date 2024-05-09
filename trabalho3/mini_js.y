@@ -72,7 +72,6 @@ void print( vector<string> codigo ) {
   cout << endl;  
 }
 
-
 %}
 
 %token ID IF ELSE LET PRINT ELSE_IF
@@ -109,15 +108,19 @@ A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
   | IDls '=' E        {$$.c = $1.c + $3.c + "[=]" + "^";}
   | ID MAIS_IGUAL E   {$$.c = $1.c + $1.c + "@" + $3.c + "+" + "=" + "^";}
   | IDls MAIS_IGUAL E {$$.c = $1.c + $1.c + "[@]" + $3.c + "+" + "[=]" + "^";}
-  | ID MAIS_MAIS      {$$.c = $1.c + $1.c + "@" + "1" + "+" + "=" + "^";}
-  | IDls MAIS_MAIS    {$$.c = $1.c + $1.c + "[@]" + "1" + "+" + "[=]" + "^";};
+  | MAIS_MAIS ID       {$$.c = $2.c + $2.c + "@" + "1" + "+" + "=" + "^";}
+  | MAIS_MAIS IDls     {$$.c = $2.c + $2.c + "[@]" + "1" + "+" + "[=]" + "^";};
   ;
 
-IDls : 
-    | ID '.' IDls  {$$.c = $1.c + "@" + $3.c; }
-    | ID '[' E ']'  {$$.c = $1.c + "@" + $3.c;}
-    | ID
-    ;
+IDls : ID '.' CAMPO  {$$.c = $1.c + "@" + $3.c; }
+      | ID '[' E ']'  {$$.c = $1.c + "@" + $3.c;}
+      | ID
+      ;
+
+CAMPO : ID '.' CAMPO  {$$.c = $1.c + "[@]" + $3.c; }
+      | ID '[' E ']'  {$$.c = $1.c + "[@]" + $3.c;}
+      | ID
+      ;
 
 CMD_LET : LET VARs { $$.c = $2.c; }
         ;
@@ -158,7 +161,7 @@ CMD_ELSE : ELSE_IF '(' E ')' CMD CMD_ELSE
                    ;
         }
          | ELSE CMD {$$.c = $2.c;}
-         |
+         | {$$.clear();}
          ;
 
 E : E '<' E { $$.c = $1.c + $3.c + $2.c; }
@@ -171,10 +174,10 @@ E : E '<' E { $$.c = $1.c + $3.c + $2.c; }
   | E IGUAL E {$$.c = $1.c + $3.c + "==";}
   | IDls '=' E {$$.c = $1.c + $3.c + "=";}
   | ID {$$.c = $1.c + "@";}
-  | ID '.' IDls {$$.c = $1.c + "@" + $3.c + "[@]"; }
+  | ID '.' CAMPO {$$.c = $1.c + "@" + $3.c + "[@]"; }
   | ID '[' E ']'  {$$.c = $1.c + "@" + $3.c + "[@]";}
-  | ID MAIS_MAIS {$$.c = $1.c + $1.c + "@" + "1" + "+" + "=";}
-  | IDls MAIS_MAIS {$$.c = $1.c + $1.c + "[@]" + "1" + "+" + "[=]";};
+  | MAIS_MAIS ID  {$$.c = $2.c + $2.c + "@" + "1" + "+" + "=";}
+  | MAIS_MAIS IDls  {$$.c = $2.c + $2.c + "[@]" + "1" + "+" + "[=]";};
   | CDOUBLE
   | CINT
   | CSTRING
