@@ -72,6 +72,31 @@ void print( vector<string> codigo ) {
   cout << endl;  
 }
 
+vector<string> limpAcesso(vector<string> s){
+  s.pop_back();
+  return s;
+}
+
+enum TipoDecl { DeclVar, DeclConst, DeclLet };
+
+
+struct Var {
+
+  int linha, coluna;
+
+  TipoDecl tipo;
+
+};
+
+map<string,Var> ts; // Tabela de Símbolos
+
+#define YYSTYPE Atributos
+
+// Dispara um erro se não pode declarar.
+
+void insere_tabela_de_simbolos( TipoDecl, Atributos );
+
+
 %}
 
 %token ID IF ELSE LET PRINT ELSE_IF
@@ -105,6 +130,7 @@ CMD : CMD_LET ';'
     | CMD_FOR
     | '{' CMDs '}' {$$.c = $2.c;}
     | CMD_WHILE
+    | ';' {$$.clear();}
     ;
 
 A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
@@ -115,15 +141,13 @@ A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
   | MAIS_MAIS IDls     {$$.c = $2.c + $2.c + "[@]" + "1" + "+" + "[=]" + "^";};
   ;
 
-IDls : ID '.' CAMPO  {$$.c = $1.c + "@" + $3.c; }
-      | ID '[' E ']' {$$.c = $1.c + "@" + $3.c;}
+IDls : ID CAMPO  {$$.c = $1.c + "@" + limpAcesso($2.c); }
       | ID
       ;
 
-CAMPO : ID '.' CAMPO  {$$.c = $1.c + "[@]" + $3.c; }
-      | ID '[' E ']'   {$$.c = $1.c + "[@]" + $3.c;}
-      | ID
-      |
+CAMPO : '.'ID CAMPO  {$$.c = $2.c + "[@]" + $3.c; }
+      | '[' E ']' CAMPO  {$$.c = $2.c + "[@]" + $4.c;}
+      | {$$.clear();}
       ;
 
 CMD_LET : LET VARs { $$.c = $2.c; }
@@ -210,8 +234,7 @@ E : E '<' E { $$.c = $1.c + $3.c + $2.c; }
   | E IGUAL E {$$.c = $1.c + $3.c + "==";}
   | IDls '=' E {$$.c = $1.c + $3.c + "=";}
   | ID {$$.c = $1.c + "@";}
-  | ID '.' CAMPO {$$.c = $1.c + "@" + $3.c + "[@]"; }
-  | ID '[' E ']'  {$$.c = $1.c + "@" + $3.c + "[@]";}
+  | ID CAMPO {$$.c = $1.c + "@" + $2.c ; }
   | MAIS_MAIS ID  {$$.c = $2.c + $2.c + "@" + "1" + "+" + "=";}
   | MAIS_MAIS IDls  {$$.c = $2.c + $2.c + "[@]" + "1" + "+" + "[=]";};
   | ID MAIS_MAIS {$$.c = $1.c + $1.c + "@" + "1" + "+" + "=";}          //MUITO ERRADO
