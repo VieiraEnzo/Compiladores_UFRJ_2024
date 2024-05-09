@@ -94,17 +94,41 @@ map<string,Var> ts; // Tabela de Símbolos
 
 // Dispara um erro se não pode declarar.
 
-void insere_tabela_de_simbolos( TipoDecl, Atributos );
+void insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
+
+  string nome = at.c[0];
+  int linha = at.linha;
+  int coluna = at.coluna;
+
+  if( ts.count(nome) > 0 ){
+
+      TipoDecl tipoDaVar = ts[nome].tipo;
+
+      if(!(tipoDaVar == tipo && tipo == DeclVar)){
+            cout << "Erro: a variável " << nome <<" já foi declarada na linha " << ts[nome].linha;
+            exit(1);
+      }
+
+  }else{
+      Var k;
+      k.tipo = tipo;
+      k.linha = linha;
+      k.coluna = coluna;
+      ts[nome] = k;
+  }
+
+}
 
 
 %}
 
-%token ID IF ELSE LET PRINT ELSE_IF
+%token ID IF ELSE PRINT ELSE_IF
 %token CDOUBLE CSTRING CINT
 %token AND OR ME_IG MA_IG DIF IGUAL
 %token MAIS_IGUAL MAIS_MAIS
 %token NEWOBJECT NEWARRAY 
 %token FOR WHILE
+%token LET CONST VAR
 
 %right '='
 %left OR
@@ -123,7 +147,7 @@ CMDs  : CMDs CMD {$$.c = $1.c + $2.c;};
       | CMD
       ;
 
-CMD : CMD_LET ';'
+CMD : CMD_DECL ';'
     | PRINT E ';' { $$.c = $2.c + "println" + "#"; }
     | A ';' 
     | CMD_IF
@@ -136,9 +160,11 @@ CMD : CMD_LET ';'
 A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
   | IDls '=' E        {$$.c = $1.c + $3.c + "[=]" + "^";}
   | ID MAIS_IGUAL E   {$$.c = $1.c + $1.c + "@" + $3.c + "+" + "=" + "^";}
-  | IDls MAIS_IGUAL E {$$.c = $1.c + $1.c + "[@]" + $3.c + "+" + "[=]" + "^";}
+  | IDls MAIS_IGUAL E  {$$.c = $1.c + $1.c + "[@]" + $3.c + "+" + "[=]" + "^";}
   | MAIS_MAIS ID       {$$.c = $2.c + $2.c + "@" + "1" + "+" + "=" + "^";}
   | MAIS_MAIS IDls     {$$.c = $2.c + $2.c + "[@]" + "1" + "+" + "[=]" + "^";};
+  | ID MAIS_MAIS       {$$.c = $1.c + $1.c + "@" + "1" + "+" + "=" + "^";}
+  | IDls MAIS_MAIS     {$$.c = $1.c + $1.c + "[@]" + "1" + "+" + "[=]" + "^";};
   ;
 
 IDls : ID CAMPO  {$$.c = $1.c + "@" + limpAcesso($2.c); }
@@ -150,16 +176,24 @@ CAMPO : '.'ID CAMPO  {$$.c = $2.c + "[@]" + $3.c; }
       | {$$.clear();}
       ;
 
-CMD_LET : LET VARs { $$.c = $2.c; }
+CMD_DECL : LET LET_VAR { $$.c = $2.c; }
+        | CONST CONST_VAR {$$.c = $2.c;}
+        | VAR VAR_VAR  {$$.c = $2.c;}
         ;
 
-VARs : VAR ',' VARs { $$.c = $1.c + $3.c; } 
-     | VAR
-     ;
+LET_VAR : ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclLet, $1 );}
+        | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclLet, $1 ); }
+        | LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
+        ;
 
-VAR : ID  { $$.c = $1.c + "&"; }
-    | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; }
-    ;
+CONST_VAR : ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclConst, $1 );}
+        | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclConst, $1 ); }
+        | LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
+        ;
+VAR_VAR : ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclVar, $1 );}
+        | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclVar, $1 ); }
+        | LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
+        ;
 
 CMD_WHILE : WHILE '(' E ')' CMD
           {
@@ -233,12 +267,11 @@ E : E '<' E { $$.c = $1.c + $3.c + $2.c; }
   | E '%' E { $$.c = $1.c + $3.c + $2.c;}
   | E IGUAL E {$$.c = $1.c + $3.c + "==";}
   | IDls '=' E {$$.c = $1.c + $3.c + "=";}
-  | ID {$$.c = $1.c + "@";}
   | ID CAMPO {$$.c = $1.c + "@" + $2.c ; }
   | MAIS_MAIS ID  {$$.c = $2.c + $2.c + "@" + "1" + "+" + "=";}
   | MAIS_MAIS IDls  {$$.c = $2.c + $2.c + "[@]" + "1" + "+" + "[=]";};
-  | ID MAIS_MAIS {$$.c = $1.c + $1.c + "@" + "1" + "+" + "=";}          //MUITO ERRADO
-  | IDls MAIS_MAIS  {$$.c = $2.c + $1.c + "[@]" + "1" + "+" + "[=]";}; //MUITO ERRADO
+  | ID MAIS_MAIS {$$.c = $1.c + $1.c + "@" + "1" + "+" + "=" + "1"  + "-";}        
+  | IDls MAIS_MAIS  {$$.c = $2.c + $1.c + "[@]" + "1" + "+" + "[=]" + "1"  + "-";}; 
   | CDOUBLE
   | CINT
   | CSTRING

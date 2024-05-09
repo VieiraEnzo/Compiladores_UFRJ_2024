@@ -40,6 +40,10 @@ STRING2      \'([^'\n]|\'\'|\\\')*\'
 "for"     { return token( FOR ); }
 "while"   { return token( WHILE ); }
 
+"let"     { return token( LET ); }
+"const"   { return token( CONST ); }
+"var"     { return token( VAR ); }
+
 "{}"       { return token( NEWOBJECT ); }
 "[]"       { return token( NEWARRAY ); }
 
