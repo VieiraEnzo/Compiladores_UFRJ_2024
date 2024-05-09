@@ -157,6 +157,8 @@ CMD : CMD_DECL ';'
     | ';' {$$.clear();}
     ;
 
+//REFAZER AS IDS E LIMPAR
+
 A : ID '=' E          {$$.c = $1.c + $3.c + "=" + "^";}
   | IDls '=' E        {$$.c = $1.c + $3.c + "[=]" + "^";}
   | ID MAIS_IGUAL E   {$$.c = $1.c + $1.c + "@" + $3.c + "+" + "=" + "^";}
@@ -176,24 +178,32 @@ CAMPO : '.'ID CAMPO  {$$.c = $2.c + "[@]" + $3.c; }
       | {$$.clear();}
       ;
 
-CMD_DECL : LET LET_VAR { $$.c = $2.c; }
-        | CONST CONST_VAR {$$.c = $2.c;}
-        | VAR VAR_VAR  {$$.c = $2.c;}
+CMD_DECL : LET LET_VARs { $$.c = $2.c; }
+        | CONST CONST_VARs {$$.c = $2.c;}
+        | VAR VAR_VARs  {$$.c = $2.c;}
         ;
 
-LET_VAR : ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclLet, $1 );}
-        | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclLet, $1 ); }
-        | LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
+LET_VARs : LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
+        | LET_VAR
         ;
+        
+LET_VAR :  ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclLet, $1 );}
+        |  ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclLet, $1 ); }
 
+
+CONST_VARs : CONST_VAR ',' CONST_VARs {$$.c = $1.c + $3.c;}
+           | CONST_VAR
+           ;
 CONST_VAR : ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclConst, $1 );}
         | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclConst, $1 ); }
-        | LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
-        ;
+
+
+VAR_VARs : LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
+         | LET_VAR
+         ;
+
 VAR_VAR : ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclVar, $1 );}
         | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclVar, $1 ); }
-        | LET_VAR ',' LET_VAR {$$.c = $1.c + $3.c;}
-        ;
 
 CMD_WHILE : WHILE '(' E ')' CMD
           {
