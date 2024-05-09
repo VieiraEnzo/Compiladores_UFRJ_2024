@@ -37,6 +37,9 @@ STRING2      \'([^'\n]|\'\'|\\\')*\'
 "else if"     { return token( ELSE_IF ); }
 "print"    { return token( PRINT ); }
 
+"for"     { return token( FOR ); }
+"while"   { return token( WHILE ); }
+
 "{}"       { return token( NEWOBJECT ); }
 "[]"       { return token( NEWARRAY ); }
 

@@ -79,6 +79,7 @@ void print( vector<string> codigo ) {
 %token AND OR ME_IG MA_IG DIF IGUAL
 %token MAIS_IGUAL MAIS_MAIS
 %token NEWOBJECT NEWARRAY 
+%token FOR WHILE
 
 %right '='
 %left OR
@@ -101,6 +102,7 @@ CMD : CMD_LET ';'
     | PRINT E ';' { $$.c = $2.c + "println" + "#"; }
     | A ';' 
     | CMD_IF
+    | CMD_FOR ';'
     | '{' CMDs '}' {$$.c = $2.c;}
     ;
 
@@ -132,6 +134,23 @@ VARs : VAR ',' VARs { $$.c = $1.c + $3.c; }
 VAR : ID  { $$.c = $1.c + "&"; }
     | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; }
     ;
+
+
+CMD_FOR : FOR '(' CMD  E ';' A ')' CMD
+        {
+          string inicio_for = gera_label("inicio_for");
+          string fim_for = gera_label("fim_for");
+          string definicao_inicio_for = ":" + inicio_for;
+          string definicao_fim_for = ":" + fim_for;
+
+          $$.c = $3.c + $4.c + 
+              inicio_for + "?" +     //Entra no for?
+              fim_for + "#" +
+              definicao_inicio_for + 
+              $8.c + $6.c + $4.c + 
+              inicio_for + "?" +    //Executa comando e verifica
+              definicao_fim_for;  
+        }
 
 CMD_IF : IF '(' E ')' CMD CMD_ELSE  
          { string lbl_true = gera_label( "lbl_true" );
@@ -178,6 +197,8 @@ E : E '<' E { $$.c = $1.c + $3.c + $2.c; }
   | ID '[' E ']'  {$$.c = $1.c + "@" + $3.c + "[@]";}
   | MAIS_MAIS ID  {$$.c = $2.c + $2.c + "@" + "1" + "+" + "=";}
   | MAIS_MAIS IDls  {$$.c = $2.c + $2.c + "[@]" + "1" + "+" + "[=]";};
+  | ID MAIS_MAIS {$$.c = $1.c + $1.c + "@" + "1" + "+" + "=";}          //MUITO ERRADO
+  | IDls MAIS_MAIS  {$$.c = $2.c + $1.c + "[@]" + "1" + "+" + "[=]";}; //MUITO ERRADO
   | CDOUBLE
   | CINT
   | CSTRING
