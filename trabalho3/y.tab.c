@@ -176,7 +176,7 @@ void insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
       TipoDecl tipoDaVar = ts[nome].tipo;
 
       if(!(tipoDaVar == tipo && tipo == DeclVar)){
-            cout << "Erro: a variável '" << nome <<"' já foi declarada na linha " << ts[nome].linha << ".\n";
+            cout << "Erro: a variável '" << nome <<"' ja foi declarada na linha " << ts[nome].linha << ".\n";
             exit(1);
       }
 

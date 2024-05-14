@@ -154,6 +154,9 @@ void verificar_const(Atributos at){
 %left '*' '/' '%'
 %left MAIS_MAIS
 
+%nonassoc '[' '('
+%left '.'
+
 %%
 
 S : CMDs { print( resolve_enderecos( $1.c + "." ) ); }
