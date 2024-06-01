@@ -1,5 +1,22 @@
 %{
 int token( int tk );
+
+vector<string> tokeniza(string lexema){
+    vector<string> aux;
+    int i = 0, inicio = 0;
+    
+    for(; i < lexema.size(); i++){
+        if(lexema[i] == ' '){
+            aux.push_back(lexema.substr(inicio, i-inicio));
+            inicio = ++i;
+        }
+    }
+    
+    aux.push_back(lexema.substr(inicio, i-inicio));
+
+    return aux;
+}
+
 %}
 
 D  	        [0-9]
@@ -34,7 +51,14 @@ STRING2      \'([^'\n]|\'\'|\\\')*\'
 "if"       { return token( IF ); }
 "else"     { return token( ELSE ); }
 "else if"     { return token( ELSE_IF ); }
+
 "print"    { return token( PRINT ); }
+"asm{".*"}"  {  string s = yytext;
+                string lexema = s.substr(4);
+                lexema.pop_back(); 
+                yylval.c = tokeniza( lexema );
+                coluna += strlen( yytext ); 
+                return ASM; }
 
 "for"     { return token( FOR ); }
 "while"   { return token( WHILE ); }
@@ -42,6 +66,9 @@ STRING2      \'([^'\n]|\'\'|\\\')*\'
 "let"     { return token( LET ); }
 "const"   { return token( CONST ); }
 "var"     { return token( VAR ); }
+"function" {return token( FUNCTION );}
+"return" {return token( RETURN );}
+
 
 "{}"       { return token( NEWOBJECT ); }
 "[]"       { return token( NEWARRAY ); }

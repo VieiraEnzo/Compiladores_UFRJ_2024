@@ -13,10 +13,16 @@ struct Atributos {
 
   int linha = 0, coluna = 0;
 
+  int n_args = 0;
+
+  vector<string>   valor_default; 
+
   void clear() {
     c.clear();
+    valor_default.clear();
     linha = 0;
     coluna = 0;
+    n_args = 0;
   }
 };
 
@@ -87,9 +93,15 @@ struct Var {
 
   TipoDecl tipo;
 
+  int n_args;
+
 };
 
-map<string,Var> ts; // Tabela de Símbolos
+int in_func = 0;  
+vector< map< string, Var > > ts = { map< string, Var >{} };
+vector<string> funcoes;
+
+
 
 #define YYSTYPE Atributos
 
@@ -101,12 +113,12 @@ void insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
   int linha = at.linha;
   int coluna = at.coluna;
 
-  if( ts.count(nome) > 0 ){
+  if( ts.back().count(nome) > 0 ){
 
-      TipoDecl tipoDaVar = ts[nome].tipo;
+      TipoDecl tipoDaVar = ts.back()[nome].tipo;
 
       if(!(tipoDaVar == tipo && tipo == DeclVar)){
-            cout << "Erro: a variável '" << nome <<"' ja foi declarada na linha " << ts[nome].linha << ".\n";
+            cout << "Erro: a variável '" << nome <<"' ja foi declarada na linha " << ts.back()[nome].linha << ".\n";
             exit(1);
       }
 
@@ -115,14 +127,14 @@ void insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
       k.tipo = tipo;
       k.linha = linha;
       k.coluna = coluna;
-      ts[nome] = k;
+      ts.back()[nome] = k;
   }
 
 }
 
 void verificar_variavel(Atributos at){
   string nome = at.c[0];
-  if(ts.count(nome) == 0){
+  if(ts.back().count(nome) == 0){
       cout << "Erro: a variável '" << nome << "' não foi declarada.\n";
       exit(1);
   }
@@ -130,7 +142,7 @@ void verificar_variavel(Atributos at){
 
 void verificar_const(Atributos at){
   string nome = at.c[0];
-  if(ts[nome].tipo == DeclConst){
+  if(ts.back()[nome].tipo == DeclConst){
     cout << "Erro: tentativa de modificar uma variável constante '" << nome << "'' .\n";
     exit(1);
   }
@@ -144,7 +156,8 @@ void verificar_const(Atributos at){
 %token MAIS_IGUAL MAIS_MAIS
 %token NEWOBJECT NEWARRAY 
 %token FOR WHILE
-%token LET CONST VAR
+%token LET CONST VAR FUNCTION
+%token ASM RETURN
 
 %right '='
 %left OR
@@ -154,13 +167,13 @@ void verificar_const(Atributos at){
 %left '*' '/' '%'
 %left MAIS_IGUAL 
 %nonassoc MAIS_MAIS
-%left '[' '('
+%right '[' '('
 %left '.'
 
 
 %%
 
-S : CMDs { print( resolve_enderecos( $1.c + "." ) ); }
+S : CMDs { print( resolve_enderecos( $1.c + "."  + funcoes) ); }
   ;
 
 CMDs  : CMDs CMD {$$.c = $1.c + $2.c;};
@@ -172,9 +185,72 @@ CMD : CMD_DECL ';'
     | A ';' 
     | CMD_IF
     | CMD_FOR
-    | '{' CMDs '}' {$$.c = $2.c;}
     | CMD_WHILE
+    | CMD_FUNC
+    | RETURN E ';' {$$.c = $2.c + "'&retorno'" + "@"+ "~";}
+    // | E ';' { $$.c = $1.c + "^"; };
+    | E ASM ';' {$$.c = $1.c + $2.c;}
+    | '{' EMPILHA_TS CMDs '}' {
+          ts.pop_back();
+          $$.c = "<{" +  $2.c  + "}>";}
     | ';' {$$.clear();}
+    ;
+
+EMPILHA_TS : { ts.push_back( map< string, Var >{} ); } 
+           ;
+    
+CMD_FUNC : FUNCTION ID {  insere_tabela_de_simbolos( DeclVar, $2 ); } 
+             '(' EMPILHA_TS LISTA_PARAMs ')' '{' CMDs '}'
+           { 
+             string lbl_endereco_funcao = gera_label( "func_" + $2.c[0] );
+             string definicao_lbl_endereco_funcao = ":" + lbl_endereco_funcao;
+             
+             $$.c = $2.c + "&" + $2.c + "{}"  + "=" + "'&funcao'" +
+                    lbl_endereco_funcao + "[=]" + "^";
+             funcoes = funcoes + definicao_lbl_endereco_funcao + $6.c + $9.c +
+                       "undefined" + "@" + "'&retorno'" + "@"+ "~";
+             ts.pop_back();
+           }
+         ;
+         
+LISTA_PARAMs : PARAMs
+           | { $$.c.clear(); }
+           ;
+           
+PARAMs : PARAMs ',' PARAM  
+       { // a & a arguments @ 0 [@] = ^ 
+         $$.c = $1.c + $3.c + "&" + $3.c + "arguments" + "@" + to_string( $1.n_args )
+                + "[@]" + "=" + "^"; 
+                
+         if( $3.valor_default.size() > 0 ) {
+           //
+         }
+         $$.n_args = $1.n_args + $3.n_args; 
+       }
+     | PARAM 
+       { // a & a arguments @ 0 [@] = ^ 
+         $$.c = $1.c + "&" + $1.c + "arguments" + "@" + "0" + "[@]" + "=" + "^"; 
+                
+         if( $1.valor_default.size() > 0 ) {
+           // Gerar código para testar valor default.
+         }
+         $$.n_args = $1.n_args; 
+       }
+     ;  
+     
+PARAM : ID 
+      { $$.c = $1.c;      
+        $$.n_args = 1;
+        $$.valor_default.clear();
+        insere_tabela_de_simbolos( DeclLet, $1 );
+        }
+    | ID '=' E
+      { // Código do IF
+        $$.c = $1.c;
+        $$.n_args = 1;
+        $$.valor_default = $3.c; 
+        insere_tabela_de_simbolos( DeclLet, $1 );
+        }
     ;
 
 A : Lvalue '=' E            {$$.c = limpAcesso($1.c) + $3.c + "=" + "^";}
@@ -301,6 +377,10 @@ E : Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_const($1);}
   | E '/' E   { $$.c = $1.c + $3.c + $2.c; }
   | E '%' E   { $$.c = $1.c + $3.c + $2.c; }
   | E IGUAL E { $$.c = $1.c + $3.c + "=="; }
+  | E '(' LISTA_ARGs ')'
+    {
+      $$.c = $3.c + to_string( $3.n_args ) + $1.c + "$";
+    }
   | Lvalue  
   | LvalueProp
   | CDOUBLE
@@ -312,6 +392,17 @@ E : Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_const($1);}
   | '(' E ')' {$$.c = $2.c;}
   ;
   
+LISTA_ARGs : ARGs
+           | { $$.clear(); }
+           ;
+             
+ARGs : ARGs ',' E
+       { $$.c = $1.c + $3.c;
+         $$.n_args = $1.n_args + $3.n_args; }
+     | E
+       { $$.c = $1.c;
+         $$.n_args = 1; }
+     ;
 
 %%
 
