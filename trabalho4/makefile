@@ -1,5 +1,5 @@
 all: saida entrada.txt
-	./saida < entrada.txt
+	./saida < ./entrada.txt
 
 lex.yy.c: mini_js.l
 	lex min_js.l

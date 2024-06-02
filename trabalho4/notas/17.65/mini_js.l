@@ -17,18 +17,15 @@ vector<string> tokeniza(string lexema){
     return aux;
 }
 
-void limpaVazio(char *str){
-  char *src = str, *dst = str;
-  while (*src) {
-      if(*src == '\t') { coluna+= 4; }
-      else if(*src == ' ') { coluna++; }
-      else if(*src == '\n') { linha++; coluna = 1; }
-      else{
-          *dst++ = *src;
-      }
-      src++;
-    }
-  *dst = '\0';
+string limpaVazio(string s){
+  string aux = "";
+  for(char c : s){
+    if(c == '\t') { coluna+= 4; }
+    else if(c == ' ') { coluna++; }
+    else if(c == '\n') { linha++; coluna = 1; }
+    else aux.push_back(c);
+  }
+  return aux;
 }
 
 %}
@@ -86,8 +83,8 @@ VAZIO       [ \t\n]*
 "false"  {return token( BOOLEAN );}
 
 
-"{"{VAZIO}"}"       { limpaVazio(yytext); return token( NEWOBJECT ); }
-"["{VAZIO}"]"       { limpaVazio(yytext); return token( NEWARRAY ); }
+"{"{VAZIO}"}"       { return token( NEWOBJECT ); }
+"["{VAZIO}"]"       { return token( NEWARRAY ); }
 
 {ID}       { return token( ID ); }
 
@@ -96,8 +93,10 @@ VAZIO       [ \t\n]*
 %%
 
 int token( int tk ) {  
-  yylval.c = vector<string>{ yytext };
-  coluna += strlen( yytext ); 
+  string s = yytext;
+  s = limpaVazio(s);
+  yylval.c = vector<string>{ s };
+  coluna += s.size(); 
   
   yylval.linha = linha;
   yylval.coluna = coluna;

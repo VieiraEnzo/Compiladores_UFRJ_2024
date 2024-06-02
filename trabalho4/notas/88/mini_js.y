@@ -201,7 +201,7 @@ CMD : CMD_DECL ';'
     | CMD_IF
     | CMD_FOR
     | CMD_WHILE
-    | CMD_FUNC  
+    | CMD_FUNC
     | RETURN E ';' {$$.c = $2.c + "'&retorno'" + "@"+ "~";}
     | E ';' { $$.c = $1.c + "^"; };
     | E ASM ';' {$$.c = $1.c + $2.c + "^";}

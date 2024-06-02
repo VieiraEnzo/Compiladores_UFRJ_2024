@@ -1,5 +1,1 @@
-function mdc( a ) {
-    return a + 1;
-}
-
-mdc(3);
+log & log {} = '&funcao' 20 [=] ^ r & r 'Hello, world!' 1 log @ $ = ^ . msg & msg arguments @ 0 [@] = ^ msg @ println # undefined ^ undefined @ '&retorno' @ ~

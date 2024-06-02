@@ -10,7 +10,6 @@
 //3- Completar declaração de argumentos em funções
 //4- Reconhecer true e false (RESOLVIDO NO LEX)
 //5- Quando chamamos um simbolo dentro da função, nn devemos checa-lo (RESOLVIDO COM IN_FUNC)
-//6- Não produzir codigo de re-declaração se ja declarada
 
 
 using namespace std;
@@ -81,14 +80,11 @@ string gera_label( string prefixo ) {
 }
 
 void print( vector<string> codigo ) {
-  bool debug = false;
-  if(!debug){
-    for( string s : codigo ) cout << s << " ";
-    cout << endl;
-  }else{
-    for(int i = 0; i < codigo.size(); i++) 
-      cout << i << ": " << codigo[i] << "\n";
-  }
+  int i = 1;
+  for( string s : codigo )
+    cout << s << " ";
+    
+  cout << endl;  
 }
 
 vector<string> limpAcesso(vector<string> s){
@@ -117,7 +113,7 @@ vector<string> funcoes;
 
 // Dispara um erro se não pode declarar.
 
-bool insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
+void insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
 
   string nome = at.c[0];
   int linha = at.linha;
@@ -126,11 +122,11 @@ bool insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
   if( ts.back().count(nome) > 0 ){
 
       TipoDecl tipoDaVar = ts.back()[nome].tipo;
+
       if(!(tipoDaVar == tipo && tipo == DeclVar)){
             cout << "Erro: a variável '" << nome <<"' já foi declarada na linha " << ts.back()[nome].linha << ".\n";
             exit(1);
       }
-      return true;
 
   }else{
       Var k;
@@ -138,7 +134,6 @@ bool insere_tabela_de_simbolos( TipoDecl tipo, Atributos at ){
       k.linha = linha;
       k.coluna = coluna;
       ts.back()[nome] = k;
-      return false;
   }
 
 }
@@ -201,10 +196,10 @@ CMD : CMD_DECL ';'
     | CMD_IF
     | CMD_FOR
     | CMD_WHILE
-    | CMD_FUNC  
+    | CMD_FUNC
     | RETURN E ';' {$$.c = $2.c + "'&retorno'" + "@"+ "~";}
     | E ';' { $$.c = $1.c + "^"; };
-    | E ASM ';' {$$.c = $1.c + $2.c + "^";}
+    | E ASM ';' {$$.c = $1.c + $2.c;}
     | '{' EMPILHA_TS CMDs '}' {
           ts.pop_back();
           $$.c = "<{" +  $3.c  + "}>";}
@@ -286,18 +281,16 @@ LET_VARs : LET_VAR ',' LET_VARs {$$.c = $1.c + $3.c;}
         | LET_VAR
         ;
         
-LET_VAR :  ID  {if(!insere_tabela_de_simbolos( DeclLet, $1)) $$.c = $1.c + "&";}
-        |  ID '=' E {if(!insere_tabela_de_simbolos( DeclLet, $1 )) $$.c = $1.c + "&" + $1.c + $3.c + "=" + "^";
-                      else $$.c = $1.c + $3.c + "=" + "^"; }
+LET_VAR :  ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclLet, $1 );}
+        |  ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclLet, $1 ); }
         ;
 
 CONST_VARs : CONST_VAR ',' CONST_VARs {$$.c = $1.c + $3.c;}
            | CONST_VAR
            ;
 
-CONST_VAR : ID  { if(!insere_tabela_de_simbolos( DeclConst, $1)) $$.c = $1.c + "&";}
-           | ID '=' E {if(!insere_tabela_de_simbolos( DeclConst, $1 )) $$.c = $1.c + "&" + $1.c + $3.c + "=" + "^";
-                        else $$.c = $1.c + $3.c + "=" + "^"; }
+CONST_VAR : ID  { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclConst, $1 );}
+           | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclConst, $1 ); }
            ;
 
 
@@ -305,9 +298,8 @@ VAR_VARs : VAR_VAR ',' VAR_VARs {$$.c = $1.c + $3.c;}
          | VAR_VAR
          ;
 
-VAR_VAR : ID    { if(!insere_tabela_de_simbolos( DeclVar, $1)) $$.c = $1.c + "&";}
-        | ID '=' E {if(!insere_tabela_de_simbolos( DeclVar, $1 )) $$.c = $1.c + "&" + $1.c + $3.c + "=" + "^";
-                     else $$.c = $1.c + $3.c + "=" + "^"; }
+VAR_VAR : ID      { $$.c = $1.c + "&";  insere_tabela_de_simbolos( DeclVar, $1 );}
+        | ID '=' E {$$.c = $1.c + "&" + $1.c + $3.c + "=" + "^"; insere_tabela_de_simbolos( DeclVar, $1 ); }
         ;
 
 CMD_WHILE : WHILE '(' E ')' CMD
@@ -405,14 +397,13 @@ E : Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1, t
   | '(' E ')' {$$.c = $2.c;}
   ;
   
-LISTA_ARGs : ARGs {$$.c = $1.c; $$.n_args = $1.n_args;}
+LISTA_ARGs : ARGs
            | { $$.clear(); }
            ;
              
 ARGs : ARGs ',' E
        { $$.c = $1.c + $3.c;
-         $$.n_args = $1.n_args + 1; 
-        }
+         $$.n_args = $1.n_args + $3.n_args; }
      | E
        { $$.c = $1.c;
          $$.n_args = 1; }
