@@ -818,12 +818,12 @@ static const yytype_int16 yyrline[] =
 {
        0,   192,   192,   195,   196,   199,   201,   202,   203,   204,
      205,   206,   207,   208,   211,   214,   217,   217,   232,   233,
-     236,   246,   257,   263,   272,   276,   277,   280,   281,   282,
-     285,   286,   289,   290,   294,   295,   298,   299,   304,   305,
-     308,   309,   313,   329,   345,   359,   372,   373,   376,   377,
-     378,   379,   382,   383,   384,   385,   386,   387,   388,   389,
-     390,   391,   392,   396,   397,   398,   399,   400,   401,   402,
-     403,   404,   405,   408,   409,   412,   416
+     236,   257,   280,   286,   295,   299,   300,   303,   304,   305,
+     308,   309,   312,   313,   317,   318,   321,   322,   327,   328,
+     331,   332,   336,   352,   368,   382,   395,   396,   399,   400,
+     401,   402,   405,   406,   407,   408,   409,   410,   411,   412,
+     413,   414,   415,   419,   420,   421,   422,   423,   424,   425,
+     426,   427,   428,   431,   432,   435,   439
 };
 #endif
 
@@ -1608,143 +1608,166 @@ yyreduce:
                 + "[@]" + "=" + "^"; 
                 
          if( yyvsp[0].valor_default.size() > 0 ) {
-           //
+       
+            string lbl_true = gera_label( "lbl_true" );
+            string lbl_fim_if = gera_label( "lbl_fim_if" );
+            string definicao_lbl_true = ":" + lbl_true;
+            string definicao_lbl_fim_if = ":" + lbl_fim_if;
+                    
+           yyval.c = yyval.c + yyvsp[0].c + "@" + "undefined" + "@" + "==" +                   // Codigo da expressão
+                   lbl_true + "?" +                                       // Código do IF
+                   lbl_fim_if + "#" +                                     // Código do False
+                   definicao_lbl_true + "<{" + yyvsp[0].c + yyvsp[0].valor_default + "=" + "^" + "}>" +   // Código do True
+                   definicao_lbl_fim_if                                   // Fim do IF
+                   ;
          }
          yyval.n_args = yyvsp[-2].n_args + yyvsp[0].n_args; 
        }
-#line 1616 "y.tab.c"
+#line 1627 "y.tab.c"
     break;
 
   case 21: /* PARAMs: PARAM  */
-#line 247 "mini_js.y"
+#line 258 "mini_js.y"
        { // a & a arguments @ 0 [@] = ^ 
          yyval.c = yyvsp[0].c + "&" + yyvsp[0].c + "arguments" + "@" + "0" + "[@]" + "=" + "^"; 
                 
          if( yyvsp[0].valor_default.size() > 0 ) {
-           // Gerar código para testar valor default.
+       
+            string lbl_true = gera_label( "lbl_true" );
+            string lbl_fim_if = gera_label( "lbl_fim_if" );
+            string definicao_lbl_true = ":" + lbl_true; 
+            string definicao_lbl_fim_if = ":" + lbl_fim_if;
+                    
+             yyval.c = yyval.c + yyvsp[0].c + "@" + "undefined" + "@" + "==" +                   // Codigo da expressão
+                   lbl_true + "?" +                                       // Código do IF
+                   lbl_fim_if + "#" +                                     // Código do False
+                   definicao_lbl_true + "<{" + yyvsp[0].c + yyvsp[0].valor_default + "=" + "^" + "}>" +   // Código do True
+                   definicao_lbl_fim_if                                   // Fim do IF
+                   ;
+
          }
          yyval.n_args = yyvsp[0].n_args; 
        }
-#line 1629 "y.tab.c"
+#line 1652 "y.tab.c"
     break;
 
   case 22: /* PARAM: ID  */
-#line 258 "mini_js.y"
+#line 281 "mini_js.y"
       { yyval.c = yyvsp[0].c;      
         yyval.n_args = 1;
         yyval.valor_default.clear();
         insere_tabela_de_simbolos( DeclLet, yyvsp[0] );
         }
-#line 1639 "y.tab.c"
+#line 1662 "y.tab.c"
     break;
 
   case 23: /* PARAM: ID '=' E  */
-#line 264 "mini_js.y"
+#line 287 "mini_js.y"
       { // Código do IF
         yyval.c = yyvsp[-2].c;
         yyval.n_args = 1;
         yyval.valor_default = yyvsp[0].c; 
         insere_tabela_de_simbolos( DeclLet, yyvsp[-2] );
         }
-#line 1650 "y.tab.c"
+#line 1673 "y.tab.c"
     break;
 
   case 24: /* Lvalue: ID  */
-#line 272 "mini_js.y"
+#line 295 "mini_js.y"
               {yyval.c = yyvsp[0].c + "@";
                 verificar_variavel(yyvsp[0], false);}
-#line 1657 "y.tab.c"
+#line 1680 "y.tab.c"
     break;
 
   case 25: /* LvalueProp: E '[' E ']'  */
-#line 276 "mini_js.y"
+#line 299 "mini_js.y"
                           {yyval.c = yyvsp[-3].c + yyvsp[-1].c + "[@]";}
-#line 1663 "y.tab.c"
+#line 1686 "y.tab.c"
     break;
 
   case 26: /* LvalueProp: E '.' ID  */
-#line 277 "mini_js.y"
+#line 300 "mini_js.y"
                           {yyval.c = yyvsp[-2].c + yyvsp[0].c + "[@]";}
-#line 1669 "y.tab.c"
+#line 1692 "y.tab.c"
     break;
 
   case 27: /* CMD_DECL: LET LET_VARs  */
-#line 280 "mini_js.y"
+#line 303 "mini_js.y"
                         { yyval.c = yyvsp[0].c; }
-#line 1675 "y.tab.c"
+#line 1698 "y.tab.c"
     break;
 
   case 28: /* CMD_DECL: CONST CONST_VARs  */
-#line 281 "mini_js.y"
+#line 304 "mini_js.y"
                            {yyval.c = yyvsp[0].c;}
-#line 1681 "y.tab.c"
+#line 1704 "y.tab.c"
     break;
 
   case 29: /* CMD_DECL: VAR VAR_VARs  */
-#line 282 "mini_js.y"
+#line 305 "mini_js.y"
                         {yyval.c = yyvsp[0].c;}
-#line 1687 "y.tab.c"
+#line 1710 "y.tab.c"
     break;
 
   case 30: /* LET_VARs: LET_VAR ',' LET_VARs  */
-#line 285 "mini_js.y"
+#line 308 "mini_js.y"
                                 {yyval.c = yyvsp[-2].c + yyvsp[0].c;}
-#line 1693 "y.tab.c"
+#line 1716 "y.tab.c"
     break;
 
   case 32: /* LET_VAR: ID  */
-#line 289 "mini_js.y"
+#line 312 "mini_js.y"
                {if(!insere_tabela_de_simbolos( DeclLet, yyvsp[0])) yyval.c = yyvsp[0].c + "&";}
-#line 1699 "y.tab.c"
+#line 1722 "y.tab.c"
     break;
 
   case 33: /* LET_VAR: ID '=' E  */
-#line 290 "mini_js.y"
+#line 313 "mini_js.y"
                     {if(!insere_tabela_de_simbolos( DeclLet, yyvsp[-2] )) yyval.c = yyvsp[-2].c + "&" + yyvsp[-2].c + yyvsp[0].c + "=" + "^";
                       else yyval.c = yyvsp[-2].c + yyvsp[0].c + "=" + "^"; }
-#line 1706 "y.tab.c"
+#line 1729 "y.tab.c"
     break;
 
   case 34: /* CONST_VARs: CONST_VAR ',' CONST_VARs  */
-#line 294 "mini_js.y"
+#line 317 "mini_js.y"
                                       {yyval.c = yyvsp[-2].c + yyvsp[0].c;}
-#line 1712 "y.tab.c"
+#line 1735 "y.tab.c"
     break;
 
   case 36: /* CONST_VAR: ID  */
-#line 298 "mini_js.y"
+#line 321 "mini_js.y"
                 { if(!insere_tabela_de_simbolos( DeclConst, yyvsp[0])) yyval.c = yyvsp[0].c + "&";}
-#line 1718 "y.tab.c"
+#line 1741 "y.tab.c"
     break;
 
   case 37: /* CONST_VAR: ID '=' E  */
-#line 299 "mini_js.y"
+#line 322 "mini_js.y"
                       {if(!insere_tabela_de_simbolos( DeclConst, yyvsp[-2] )) yyval.c = yyvsp[-2].c + "&" + yyvsp[-2].c + yyvsp[0].c + "=" + "^";
                         else yyval.c = yyvsp[-2].c + yyvsp[0].c + "=" + "^"; }
-#line 1725 "y.tab.c"
+#line 1748 "y.tab.c"
     break;
 
   case 38: /* VAR_VARs: VAR_VAR ',' VAR_VARs  */
-#line 304 "mini_js.y"
+#line 327 "mini_js.y"
                                 {yyval.c = yyvsp[-2].c + yyvsp[0].c;}
-#line 1731 "y.tab.c"
+#line 1754 "y.tab.c"
     break;
 
   case 40: /* VAR_VAR: ID  */
-#line 308 "mini_js.y"
+#line 331 "mini_js.y"
                 { if(!insere_tabela_de_simbolos( DeclVar, yyvsp[0])) yyval.c = yyvsp[0].c + "&";}
-#line 1737 "y.tab.c"
+#line 1760 "y.tab.c"
     break;
 
   case 41: /* VAR_VAR: ID '=' E  */
-#line 309 "mini_js.y"
+#line 332 "mini_js.y"
                    {if(!insere_tabela_de_simbolos( DeclVar, yyvsp[-2] )) yyval.c = yyvsp[-2].c + "&" + yyvsp[-2].c + yyvsp[0].c + "=" + "^";
                      else yyval.c = yyvsp[-2].c + yyvsp[0].c + "=" + "^"; }
-#line 1744 "y.tab.c"
+#line 1767 "y.tab.c"
     break;
 
   case 42: /* CMD_WHILE: WHILE '(' E ')' CMD  */
-#line 314 "mini_js.y"
+#line 337 "mini_js.y"
           {
             string inicio_while = gera_label("inicio_while");
             string fim_while = gera_label("fim_while");
@@ -1759,11 +1782,11 @@ yyreduce:
                     inicio_while + "?" +
                     definicao_fim_while;
           }
-#line 1763 "y.tab.c"
+#line 1786 "y.tab.c"
     break;
 
   case 43: /* CMD_FOR: FOR '(' CMD E ';' E ')' CMD  */
-#line 330 "mini_js.y"
+#line 353 "mini_js.y"
         {
           string inicio_for = gera_label("inicio_for");
           string fim_for = gera_label("fim_for");
@@ -1778,11 +1801,11 @@ yyreduce:
               inicio_for + "?" +    //Executa comando e verifica
               definicao_fim_for;  
         }
-#line 1782 "y.tab.c"
+#line 1805 "y.tab.c"
     break;
 
   case 44: /* CMD_IF: IF '(' E ')' CMD CMD_ELSE  */
-#line 346 "mini_js.y"
+#line 369 "mini_js.y"
          { string lbl_true = gera_label( "lbl_true" );
            string lbl_fim_if = gera_label( "lbl_fim_if" );
            string definicao_lbl_true = ":" + lbl_true;
@@ -1795,11 +1818,11 @@ yyreduce:
                    definicao_lbl_fim_if         // Fim do IF
                    ;
          }
-#line 1799 "y.tab.c"
+#line 1822 "y.tab.c"
     break;
 
   case 45: /* CMD_ELSE: ELSE_IF '(' E ')' CMD CMD_ELSE  */
-#line 360 "mini_js.y"
+#line 383 "mini_js.y"
         { string lbl_true = gera_label( "lbl_true" );
            string lbl_fim_if = gera_label( "lbl_fim_if" );
            string definicao_lbl_true = ":" + lbl_true;
@@ -1812,154 +1835,154 @@ yyreduce:
                    definicao_lbl_fim_if         // Fim do IF
                    ;
         }
-#line 1816 "y.tab.c"
+#line 1839 "y.tab.c"
     break;
 
   case 46: /* CMD_ELSE: ELSE CMD  */
-#line 372 "mini_js.y"
+#line 395 "mini_js.y"
                     {yyval.c = yyvsp[0].c;}
-#line 1822 "y.tab.c"
+#line 1845 "y.tab.c"
     break;
 
   case 47: /* CMD_ELSE: %empty  */
-#line 373 "mini_js.y"
+#line 396 "mini_js.y"
            {yyval.clear();}
-#line 1828 "y.tab.c"
+#line 1851 "y.tab.c"
     break;
 
   case 48: /* E: Lvalue '=' E  */
-#line 376 "mini_js.y"
+#line 399 "mini_js.y"
                  {yyval.c = limpAcesso(yyvsp[-2].c) + yyvsp[0].c + "="; verificar_variavel(yyvsp[-2], true);}
-#line 1834 "y.tab.c"
+#line 1857 "y.tab.c"
     break;
 
   case 49: /* E: LvalueProp '=' E  */
-#line 377 "mini_js.y"
+#line 400 "mini_js.y"
                      {yyval.c = limpAcesso(yyvsp[-2].c) + yyvsp[0].c + "[=]";}
-#line 1840 "y.tab.c"
+#line 1863 "y.tab.c"
     break;
 
   case 50: /* E: Lvalue MAIS_IGUAL E  */
-#line 378 "mini_js.y"
+#line 401 "mini_js.y"
                         {yyval.c = limpAcesso(yyvsp[-2].c) + yyvsp[-2].c + yyvsp[0].c + "+" + "=";}
-#line 1846 "y.tab.c"
+#line 1869 "y.tab.c"
     break;
 
   case 51: /* E: LvalueProp MAIS_IGUAL E  */
-#line 379 "mini_js.y"
+#line 402 "mini_js.y"
                             {yyval.c = limpAcesso(yyvsp[-2].c) + yyvsp[-2].c + yyvsp[0].c + "+" + "[=]";}
-#line 1852 "y.tab.c"
+#line 1875 "y.tab.c"
     break;
 
   case 52: /* E: Lvalue MAIS_MAIS  */
-#line 382 "mini_js.y"
+#line 405 "mini_js.y"
                           {yyval.c = yyvsp[-1].c + limpAcesso(yyvsp[-1].c) + yyvsp[-1].c + "1" + "+" + "=" + "^";}
-#line 1858 "y.tab.c"
+#line 1881 "y.tab.c"
     break;
 
   case 53: /* E: LvalueProp MAIS_MAIS  */
-#line 383 "mini_js.y"
+#line 406 "mini_js.y"
                           {yyval.c = yyvsp[-1].c + limpAcesso(yyvsp[-1].c) + yyvsp[-1].c + "1" + "+" + "[=]" + "^";}
-#line 1864 "y.tab.c"
+#line 1887 "y.tab.c"
     break;
 
   case 54: /* E: E '<' E  */
-#line 384 "mini_js.y"
+#line 407 "mini_js.y"
              { yyval.c = yyvsp[-2].c + yyvsp[0].c + yyvsp[-1].c; }
-#line 1870 "y.tab.c"
+#line 1893 "y.tab.c"
     break;
 
   case 55: /* E: E '>' E  */
-#line 385 "mini_js.y"
+#line 408 "mini_js.y"
               { yyval.c = yyvsp[-2].c + yyvsp[0].c + yyvsp[-1].c; }
-#line 1876 "y.tab.c"
+#line 1899 "y.tab.c"
     break;
 
   case 56: /* E: E '+' E  */
-#line 386 "mini_js.y"
+#line 409 "mini_js.y"
               { yyval.c = yyvsp[-2].c + yyvsp[0].c + yyvsp[-1].c; }
-#line 1882 "y.tab.c"
+#line 1905 "y.tab.c"
     break;
 
   case 57: /* E: E '-' E  */
-#line 387 "mini_js.y"
+#line 410 "mini_js.y"
               { yyval.c = yyvsp[-2].c + yyvsp[0].c + yyvsp[-1].c; }
-#line 1888 "y.tab.c"
+#line 1911 "y.tab.c"
     break;
 
   case 58: /* E: E '*' E  */
-#line 388 "mini_js.y"
+#line 411 "mini_js.y"
               { yyval.c = yyvsp[-2].c + yyvsp[0].c + yyvsp[-1].c; }
-#line 1894 "y.tab.c"
+#line 1917 "y.tab.c"
     break;
 
   case 59: /* E: E '/' E  */
-#line 389 "mini_js.y"
+#line 412 "mini_js.y"
               { yyval.c = yyvsp[-2].c + yyvsp[0].c + yyvsp[-1].c; }
-#line 1900 "y.tab.c"
+#line 1923 "y.tab.c"
     break;
 
   case 60: /* E: E '%' E  */
-#line 390 "mini_js.y"
+#line 413 "mini_js.y"
               { yyval.c = yyvsp[-2].c + yyvsp[0].c + yyvsp[-1].c; }
-#line 1906 "y.tab.c"
+#line 1929 "y.tab.c"
     break;
 
   case 61: /* E: E IGUAL E  */
-#line 391 "mini_js.y"
+#line 414 "mini_js.y"
               { yyval.c = yyvsp[-2].c + yyvsp[0].c + "=="; }
-#line 1912 "y.tab.c"
+#line 1935 "y.tab.c"
     break;
 
   case 62: /* E: E '(' LISTA_ARGs ')'  */
-#line 393 "mini_js.y"
+#line 416 "mini_js.y"
     {
       yyval.c = yyvsp[-1].c + to_string( yyvsp[-1].n_args ) + yyvsp[-3].c + "$";
     }
-#line 1920 "y.tab.c"
+#line 1943 "y.tab.c"
     break;
 
   case 68: /* E: '-' E  */
-#line 401 "mini_js.y"
+#line 424 "mini_js.y"
           {yyval.c = "0" + yyvsp[0].c + "-";}
-#line 1926 "y.tab.c"
+#line 1949 "y.tab.c"
     break;
 
   case 72: /* E: '(' E ')'  */
-#line 405 "mini_js.y"
+#line 428 "mini_js.y"
               {yyval.c = yyvsp[-1].c;}
-#line 1932 "y.tab.c"
+#line 1955 "y.tab.c"
     break;
 
   case 73: /* LISTA_ARGs: ARGs  */
-#line 408 "mini_js.y"
+#line 431 "mini_js.y"
                   {yyval.c = yyvsp[0].c; yyval.n_args = yyvsp[0].n_args;}
-#line 1938 "y.tab.c"
+#line 1961 "y.tab.c"
     break;
 
   case 74: /* LISTA_ARGs: %empty  */
-#line 409 "mini_js.y"
+#line 432 "mini_js.y"
              { yyval.clear(); }
-#line 1944 "y.tab.c"
+#line 1967 "y.tab.c"
     break;
 
   case 75: /* ARGs: ARGs ',' E  */
-#line 413 "mini_js.y"
+#line 436 "mini_js.y"
        { yyval.c = yyvsp[-2].c + yyvsp[0].c;
          yyval.n_args = yyvsp[-2].n_args + 1; 
         }
-#line 1952 "y.tab.c"
+#line 1975 "y.tab.c"
     break;
 
   case 76: /* ARGs: E  */
-#line 417 "mini_js.y"
+#line 440 "mini_js.y"
        { yyval.c = yyvsp[0].c;
          yyval.n_args = 1; }
-#line 1959 "y.tab.c"
+#line 1982 "y.tab.c"
     break;
 
 
-#line 1963 "y.tab.c"
+#line 1986 "y.tab.c"
 
       default: break;
     }
@@ -2152,7 +2175,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 421 "mini_js.y"
+#line 444 "mini_js.y"
 
 
 #include "lex.yy.c"
