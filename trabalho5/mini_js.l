@@ -60,6 +60,7 @@ VAZIO       [ \t\n]*
 "!="	   { return token( DIF ); }
 "=="	   { return token( IGUAL ); }
 "=>"     { return token( SETA ); }
+")"{VAZIO}"=>" { return token( PARENTESES_FUNCAO ); }
 
 "+="       { return token( MAIS_IGUAL ); }
 "++"       { return token( MAIS_MAIS ); }
@@ -87,7 +88,6 @@ VAZIO       [ \t\n]*
 "false"  {return token( BOOLEAN );}
 
 
-"{"{VAZIO}"}"       { limpaVazio(yytext); return token( NEWOBJECT ); }
 "["{VAZIO}"]"       { limpaVazio(yytext); return token( NEWARRAY ); }
 
 {ID}       { return token( ID ); }

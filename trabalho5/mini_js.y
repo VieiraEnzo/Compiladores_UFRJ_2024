@@ -160,6 +160,7 @@ void verificar_variavel(Atributos at, bool modificavel){
   }
 
   if(in_func) return;
+  cout << "in_func = " << in_func << "\n"; 
   cout << "Erro: a variável '" << nome << "' não foi declarada.\n";
   exit(1);
 }
@@ -174,6 +175,7 @@ void verificar_variavel(Atributos at, bool modificavel){
 %token FOR WHILE
 %token LET CONST VAR FUNCTION
 %token ASM RETURN BOOLEAN SETA
+%token PARENTESES_FUNCAO
 
 %right '=' SETA
 %left OR
@@ -193,11 +195,10 @@ S : CMDs { print( resolve_enderecos( $1.c + "."  + funcoes) ); }
   ;
 
 CMDs  : CMDs CMD {$$.c = $1.c + $2.c;};
-      | CMD
+      |   {$$.clear();}
       ;
 
 CMD : CMD_DECL ';'
-    // | PRINT E ';' { $$.c = $2.c + "println" + "#"; }
     | CMD_IF
     | CMD_FOR
     | CMD_WHILE
@@ -234,7 +235,7 @@ LISTA_PARAMs : PARAMs
            ;
            
 PARAMs : PARAMs ',' PARAM  
-       { // a & a arguments @ 0 [@] = ^ 
+       { 
          $$.c = $1.c + $3.c + "&" + $3.c + "arguments" + "@" + to_string( $1.n_args )
                 + "[@]" + "=" + "^"; 
                 
@@ -255,7 +256,7 @@ PARAMs : PARAMs ',' PARAM
          $$.n_args = $1.n_args + $3.n_args; 
        }
      | PARAM 
-       { // a & a arguments @ 0 [@] = ^ 
+       {  
          $$.c = $1.c + "&" + $1.c + "arguments" + "@" + "0" + "[@]" + "=" + "^"; 
                 
          if( $1.valor_default.size() > 0 ) {
@@ -284,7 +285,7 @@ PARAM : ID
         insere_tabela_de_simbolos( DeclLet, $1 );
         }
     | ID '=' E
-      { // Código do IF
+      { 
         $$.c = $1.c;
         $$.n_args = 1;
         $$.valor_default = $3.c; 
@@ -416,11 +417,24 @@ E : Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1, t
     {
       $$.c = $3.c + to_string( $3.n_args ) + $1.c + "$";
     }
-  //Function (ARGS) {CMDS}      -Usar as mesamas coisa que usamos para gerar codigo de função
-  //(ARGS) => {CMDS}            -menos, declar um objeto de função. Para isso, usaremos [<=], nova
-  //(ARGS) => E                 -função que, na expressão a[b] = c, retorna o objeto a em vez de 'c'
-  //id => E
+  //Function (FARGS) {CMDS}        -Usar as mesamas coisa que usamos para gerar codigo de função
+  //(FARGS) => {CMDS}              -menos, declar um objeto de função. Para isso, usaremos [<=], nova
+  //(FARGS) => E (Pd causar confl) -função que, na expressão a[b] = c, retorna o objeto a em vez de 'c'
+  //(FARGS Parenteses_Função => E
   //id => {CMDS}
+  | ID EMPILHA_TS {in_func++;} SETA E {
+              in_func--;    
+              string lbl_endereco_funcao = gera_label( "func_" + $1.c[0] );
+              string definicao_lbl_endereco_funcao = ":" + lbl_endereco_funcao;
+
+              $$.clear();
+              $$.c = $$.c + "{}" + "'&funcao'" + lbl_endereco_funcao + "[<=]" + "^";
+              funcoes = funcoes + definicao_lbl_endereco_funcao + 
+              $1.c + "&" + $1.c + "arguments" + "@" + "0" + "[@]" + "=" + "^" +   //Gera parametro
+              $5.c  + "'&retorno'" + "@"+ "~";                 //CMDs e retorno
+              ts.pop_back();
+            }
+
   | Lvalue  
   | LvalueProp
   | CDOUBLE
@@ -429,11 +443,20 @@ E : Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1, t
   | '-' E {$$.c = "0" + $2.c + "-";}
   | NEWARRAY
   | BOOLEAN
-  | NEWOBJECT
   | '(' E ')' {$$.c = $2.c;}
+  | Lvalue '=' '{' '}' { $$.c = limpAcesso($1.c) + "{}" + "="; verificar_variavel($1, true);}
+  | '(' '{' '}' ')' { $$.clear(); $$.c =  $$.c + "{}"; }
+
   // | {}  (Já é newObjetct)
   // | { Campos}
   ;
+
+//FARGS : FARG , FARGS
+      //| FARG
+
+//FARG : ID
+      //| LAVUE = E
+      //| 
 
 //Campos : Campo, Campos
         //| Campo
