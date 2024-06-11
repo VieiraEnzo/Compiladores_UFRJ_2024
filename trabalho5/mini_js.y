@@ -283,7 +283,7 @@ PARAM : ID
         $$.n_args = 1;
         $$.valor_default.clear();
         insere_tabela_de_simbolos( DeclLet, $1 );
-        }
+      }
     | ID '=' E
       { 
         $$.c = $1.c;
@@ -422,7 +422,8 @@ E : Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1, t
   //(FARGS) => E (Pd causar confl) -função que, na expressão a[b] = c, retorna o objeto a em vez de 'c'
   //(FARGS Parenteses_Função => E
   //id => {CMDS}
-  | ID EMPILHA_TS {in_func++;} SETA E {
+  | ID EMPILHA_TS SETA { in_func++; } E 
+      {
               in_func--;    
               string lbl_endereco_funcao = gera_label( "func_" + $1.c[0] );
               string definicao_lbl_endereco_funcao = ":" + lbl_endereco_funcao;
@@ -433,22 +434,34 @@ E : Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1, t
               $1.c + "&" + $1.c + "arguments" + "@" + "0" + "[@]" + "=" + "^" +   //Gera parametro
               $5.c  + "'&retorno'" + "@"+ "~";                 //CMDs e retorno
               ts.pop_back();
-            }
+      }
+  | ID EMPILHA_TS SETA '{' { in_func++; } CMDs '}' 
+    { 
+              in_func--;    
+              string lbl_endereco_funcao = gera_label( "func_" + $1.c[0] );
+              string definicao_lbl_endereco_funcao = ":" + lbl_endereco_funcao;
 
+              $$.clear();
+              $$.c = $$.c + "{}" + "'&funcao'" + lbl_endereco_funcao + "[<=]" + "^";
+              funcoes = funcoes + definicao_lbl_endereco_funcao + 
+              $1.c + "&" + $1.c + "arguments" + "@" + "0" + "[@]" + "=" + "^" +   //Gera parametro
+              $6.c  + "'&retorno'" + "@"+ "~";                 //CMDs e retorno
+              ts.pop_back();
+    }
   | Lvalue  
   | LvalueProp
   | CDOUBLE
   | CINT
   | CSTRING
+  | '[' ']' {$$.clear(); $$.c = $$.c + "[]";}
   | '-' E {$$.c = "0" + $2.c + "-";}
   | NEWARRAY
   | BOOLEAN
   | '(' E ')' {$$.c = $2.c;}
   | Lvalue '=' '{' '}' { $$.c = limpAcesso($1.c) + "{}" + "="; verificar_variavel($1, true);}
   | '(' '{' '}' ')' { $$.clear(); $$.c =  $$.c + "{}"; }
-
-  // | {}  (Já é newObjetct)
-  // | { Campos}
+  // | '{' Campos '}'  { $$.c = $2.c; }  //não sabe se é bloco ou objeto
+  | '[' ELEMENTOS ']' {$$.c = "[]" + $2.c;}
   ;
 
 //FARGS : FARG , FARGS
@@ -458,11 +471,28 @@ E : Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1, t
       //| LAVUE = E
       //| 
 
-//Campos : Campo, Campos
-        //| Campo
+// Campos : Campo ',' Campos {$$.c = $1.c + $3.c;}
+//         |Campo
   
-//Campo : id : e
+// Campo : ID ':' E  {$$.c = $1.c + $3.c + "[<=]";}
   
+ELEMENTOS : ELEMENTOS ',' ELEMENTO 
+      {
+          $$.c = $1.c + $3.c + to_string( $1.n_args ) + "[<=]"; 
+          $$.n_args = $1.n_args + $3.n_args;
+      }
+          | ELEMENTO  
+      {
+          $$.c = $1.c + "0" +  "[<=]"; 
+          $$.n_args = $1.n_args;
+      }
+          ; 
+
+ELEMENTO: CDOUBLE {$$.c = $1.c;  $$.n_args = 1;}
+        | CINT  {$$.c = $1.c;  $$.n_args = 1;}
+        | CSTRING {$$.c = $1.c;  $$.n_args = 1;}
+        ;
+
 LISTA_ARGs : ARGs {$$.c = $1.c; $$.n_args = $1.n_args;}
            | { $$.clear(); }
            ;

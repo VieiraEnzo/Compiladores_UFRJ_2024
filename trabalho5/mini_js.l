@@ -87,9 +87,6 @@ VAZIO       [ \t\n]*
 "true"  {return token( BOOLEAN );}
 "false"  {return token( BOOLEAN );}
 
-
-"["{VAZIO}"]"       { limpaVazio(yytext); return token( NEWARRAY ); }
-
 {ID}       { return token( ID ); }
 
 .          { return token( *yytext ); }
