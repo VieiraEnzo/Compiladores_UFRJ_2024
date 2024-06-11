@@ -486,11 +486,10 @@ ELEMENTOS : ELEMENTOS ',' ELEMENTO
           $$.c = $1.c + "0" +  "[<=]"; 
           $$.n_args = $1.n_args;
       }
-          ; 
+      ; 
 
-ELEMENTO: CDOUBLE {$$.c = $1.c;  $$.n_args = 1;}
-        | CINT  {$$.c = $1.c;  $$.n_args = 1;}
-        | CSTRING {$$.c = $1.c;  $$.n_args = 1;}
+ELEMENTO: E {$$.c = $1.c;  $$.n_args = 1;}
+        | '{' '}' {$$.clear(); $$.c = $$.c + "{}";}
         ;
 
 LISTA_ARGs : ARGs {$$.c = $1.c; $$.n_args = $1.n_args;}
