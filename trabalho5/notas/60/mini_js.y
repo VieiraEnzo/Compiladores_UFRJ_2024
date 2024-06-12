@@ -202,15 +202,8 @@ CMD : CMD_DECL ';'
     | CMD_FOR
     | CMD_WHILE
     | CMD_FUNC  
-    | RETURN E ';' {
-          if(!in_func){ cout << "Erro: Não é permitido 'return' fora de funções.\n"; exit(1);}
-          $$.c = $2.c + "'&retorno'" + "@"+ "~";
-        }
-    | RETURN OBJ ';' 
-      {
-        if(!in_func){ cout << "Erro: Não é permitido 'return' fora de funções.\n"; exit(1);}
-        $$.c = $2.c + "'&retorno'" + "@"+ "~";
-      }
+    | RETURN E ';' {$$.c = $2.c + "'&retorno'" + "@"+ "~";}
+    | RETURN OBJ ';' {$$.c = $2.c + "'&retorno'" + "@"+ "~";}
     | E ';' { $$.c = $1.c + "^"; };
     | E ASM ';' {$$.c = $1.c + $2.c + "^"; }
     | '{' EMPILHA_TS CMDs '}' {
@@ -297,7 +290,7 @@ PARAM : ID
         $$.n_args = 1;
         $$.valor_default = $3.c; 
         insere_tabela_de_simbolos( DeclLet, $1 );
-      }
+        }
     ;
 
 Lvalue : ID   {$$.c = $1.c + "@";
@@ -407,7 +400,7 @@ CMD_ELSE : ELSE_IF '(' E ')' CMD CMD_ELSE
          ;
 
    
-E : Lvalue '=' OBJ { $$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1, true);} 
+E : Lvalue '=' OBJ { $$.c = limpAcesso($1.c) + "{}" + "="; verificar_variavel($1, true);} 
   |Lvalue '=' E {$$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1, true);}
   | LvalueProp '=' E {$$.c = limpAcesso($1.c) + $3.c + "[=]";}
   | Lvalue MAIS_IGUAL E {$$.c = limpAcesso($1.c) + $1.c + $3.c + "+" + "=";}
@@ -446,27 +439,18 @@ E : Lvalue '=' OBJ { $$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1
               string lbl_endereco_funcao = gera_label( "func_" + $1.c[0] );
               string definicao_lbl_endereco_funcao = ":" + lbl_endereco_funcao;
 
-              $$.c = vector<string>{"{}"} + "'&funcao'" + lbl_endereco_funcao + "[<=]";
+              $$.clear();
+              $$.c = $$.c + "{}" + "'&funcao'" + lbl_endereco_funcao + "[<=]";
               funcoes = funcoes + definicao_lbl_endereco_funcao + 
               $1.c + "&" + $1.c + "arguments" + "@" + "0" + "[@]" + "=" + "^" +  
               $6.c  + "'&retorno'" + "@"+ "~";                 
               ts.pop_back();
     }
-  // | '(' PARENTESES_FUNCAO SETA E
-  // | '(' PARENTESES_FUNCAO SETA '{' EMPILHA_TS CMDs '}' {ts.pop_back();}
-  | '(' FARGS PARENTESES_FUNCAO SETA E  
-      {
-        in_func--;
-        string lbl_endereco_funcao = gera_label( "func_");
-        string definicao_lbl_endereco_funcao = ":" + lbl_endereco_funcao;
-      
-        $$.c = vector<string>{"{}"} + "'&funcao'" + lbl_endereco_funcao + "[<=]";
-        funcoes = funcoes + definicao_lbl_endereco_funcao + $2.c + $5.c +
-              "'&retorno'" + "@"+ "~";
-        ts.pop_back();
-      }
-  // | '(' FARGS PARENTESES_FUNCAO SETA '{' CMDs '}' {ts.pop_back();}
-  | FUNCTION '(' { in_func++;} EMPILHA_TS LISTA_PARAMs ')' '{' CMDs '}'
+  | '(' PARENTESES_FUNCAO SETA E
+  | '(' PARENTESES_FUNCAO SETA '{' EMPILHA_TS CMDs '}' {ts.pop_back();}
+  | '(' FARGS PARENTESES_FUNCAO SETA E  {ts.pop_back();}
+  | '(' FARGS PARENTESES_FUNCAO SETA '{' CMDs '}' {ts.pop_back();}
+  | FUNCTION '(' { in_func++;} EMPILHA_TS LISTA_PARAMs ')' '{' CMDs '}' {ts.pop_back();} 
     {
       in_func--;
       string lbl_endereco_funcao = gera_label( "func_");
@@ -487,74 +471,16 @@ E : Lvalue '=' OBJ { $$.c = limpAcesso($1.c) + $3.c + "="; verificar_variavel($1
   | '[' ']' {$$.clear(); $$.c = $$.c + "[]";}
   | '[' ELEMENTOS ']' {$$.c = "[]" + $2.c;}
   | '(' E ')' {$$.c = $2.c;}
-  | '(' OBJ ')' { $$.c = $2.c;}
+  | '(' OBJ ')' { $$.clear(); $$.c =  $$.c + "{}"; }
   ;
 
-FARGS : FARGS ',' FARG  
-      { 
-         $$.c = $1.c + $3.c + "&" + $3.c + "arguments" + "@" + to_string( $1.n_args )
-                + "[@]" + "=" + "^"; 
-                
-         if( $3.valor_default.size() > 0 ) {
-       
-            string lbl_true = gera_label( "lbl_true" );
-            string lbl_fim_if = gera_label( "lbl_fim_if" );
-            string definicao_lbl_true = ":" + lbl_true;
-            string definicao_lbl_fim_if = ":" + lbl_fim_if;
-                    
-           $$.c = $$.c + $3.c + "@" + "undefined" + "@" + "==" +                   // Codigo da expressão
-                   lbl_true + "?" +                                       // Código do IF
-                   lbl_fim_if + "#" +                                     // Código do False
-                   definicao_lbl_true + "<{" + $3.c + $3.valor_default + "=" + "^" + "}>" +   // Código do True
-                   definicao_lbl_fim_if                                   // Fim do IF
-                   ;
-         }
-         $$.n_args = $1.n_args + $3.n_args; 
-       }
-
-     | FARG EMPILHA_TS {in_func++;}
-      {  
-          $$.c = $1.c + "&" + $1.c + "arguments" + "@" + "0" + "[@]" + "=" + "^"; 
-                  
-          if( $1.valor_default.size() > 0 ) {
-        
-              string lbl_true = gera_label( "lbl_true" );
-              string lbl_fim_if = gera_label( "lbl_fim_if" );
-              string definicao_lbl_true = ":" + lbl_true; 
-              string definicao_lbl_fim_if = ":" + lbl_fim_if;
-                      
-              $$.c = $$.c + $1.c + "@" + "undefined" + "@" + "==" +                   // Codigo da expressão
-                    lbl_true + "?" +                                       // Código do IF
-                    lbl_fim_if + "#" +                                     // Código do False
-                    definicao_lbl_true + "<{" + $1.c + $1.valor_default + "=" + "^" + "}>" +   // Código do True
-                    definicao_lbl_fim_if                                   // Fim do IF
-                    ;
-
-          }
-          $$.n_args = $1.n_args; 
-        }
+FARGS : FARGS ',' FARG
+     | FARG EMPILHA_TS
      ;
 
-FARG : ID   
-    { 
-        $$.c = $1.c;      
-        $$.n_args = 1;
-        $$.valor_default.clear();
-        insere_tabela_de_simbolos( DeclVar, $1 );
-    }
-    | Lvalue '=' E  
-    { 
-        $$.c = limpAcesso($1.c);
-        $$.n_args = 1;
-        $$.valor_default = $3.c; 
-        insere_tabela_de_simbolos( DeclLet, $1 );
-    }
-    | Lvalue '=' OBJ
-    { 
-        $$.c = $1.c;
-        $$.n_args = 1;
-        $$.valor_default = $3.c; 
-    }
+FARG : ID   {insere_tabela_de_simbolos( DeclVar, $1 );}
+    | Lvalue '=' E  {insere_tabela_de_simbolos( DeclVar, $1 );}
+    | Lvalue '=' OBJ { /* Aqui nãopode ter declara var */ }
     ;
 
 OBJ : '{' List_Campos '}' {$$.c = "{}" + $2.c;}

@@ -893,6 +893,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 /* rule 15 can match eol */
+*yy_cp = (yy_hold_char); /* undo effects of setting up yytext */
+YY_LINENO_REWIND_TO(yy_bp + 1);
+(yy_c_buf_p) = yy_cp = yy_bp + 1;
+YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
 #line 63 "mini_js.l"
 { return token( PARENTESES_FUNCAO ); }
@@ -992,7 +996,7 @@ YY_RULE_SETUP
 #line 94 "mini_js.l"
 ECHO;
 	YY_BREAK
-#line 996 "lex.yy.c"
+#line 1000 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2003,7 +2007,11 @@ void yyfree (void * ptr )
 int token( int tk ) {  
   yylval.c = vector<string>{ yytext };
   coluna += strlen( yytext ); 
-  
+  // cout << "valores "<<  yylval.c[0] << " " << ts.size() << "\n";
+  // cout << "Tabela de simbolos: ";
+  // for(auto a : ts.back()) cout << a.first << " ";
+  // cout << "\n";
+
   yylval.linha = linha;
   yylval.coluna = coluna;
 
